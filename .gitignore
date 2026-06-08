@@ -1,3 +1,59 @@
+# ===============================================
+# SignalRank-RAG specific
+# ===============================================
+
+# MLflow
+mlruns/
+
+# Model artifacts
+artifacts/
+models/
+checkpoints/
+
+# Vector databases
+chroma_db/
+chroma/
+vectordb/
+vectorstore/
+
+# Data
+data/raw/
+data/interim/
+data/processed/
+
+# Experiment outputs
+experiments/
+outputs/
+
+# Hugging Face
+.cache/huggingface/
+.huggingface/
+
+# Weights & Biases
+wandb/
+
+# DVC
+.dvc/cache/
+.dvc/tmp/
+
+# FAISS
+*.faiss
+
+# Numpy embeddings
+*.npy
+
+# Pickle artifacts
+*.pkl
+
+# Torch checkpoints
+*.pt
+*.pth
+
+# =================================================
+# Standard Python .gitignore
+# =================================================
+
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]
