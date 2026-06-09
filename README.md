@@ -17,8 +17,8 @@ The project focuses on:
 ## Roadmap
 
 - [x] Project scaffold
+- [x] Exception handling
 - [ ] Logging framework
-- [ ] Exception handling
 - [ ] Configuration management
 - [ ] Data ingestion
 - [ ] Chunking
