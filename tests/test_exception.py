@@ -5,7 +5,7 @@ from src.signalrank.exception.exception import SignalRankException
 
 def test_exception():
 
-    with pytest.raises(SignalRankException):
+    with pytest.raises(SignalRankException) as exc_info:
         
         try:
 
@@ -13,3 +13,7 @@ def test_exception():
 
         except Exception as e:
             raise SignalRankException(e, sys)
+        
+    assert "division by zero" in str(exc_info.value)
+    assert "line number" in str(exc_info.value)
+    assert "python script" in str(exc_info.value)
