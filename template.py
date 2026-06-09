@@ -40,10 +40,19 @@ list_of_files=[
     f"src/{project_name}/components/retrieval.py",
     f"src/{project_name}/components/reranking.py",
 
+    # Core
+    f"src/{project_name}/core/__init__.py",
+
     # Pipelines
     f"src/{project_name}/pipelines/__init__.py",
     f"src/{project_name}/pipelines/training_pipeline.py",
     f"src/{project_name}/pipelines/inference_pipeline.py",
+
+    # Entity
+    f"src/{project_name}/entity/__init__.py",
+
+    # Schema
+    f"src/{project_name}/schema/__init__.py",
 
     # Evaluation
     f"src/{project_name}/evaluation/__init__.py",
@@ -53,6 +62,9 @@ list_of_files=[
     # Prompts
     f"src/{project_name}/prompts/__init__.py",
     f"src/{project_name}/prompts/rag_prompts.py",
+
+    # Utils
+    f"src/{project_name}/utils/__init__.py",
 
     # Documentation
     "docs/.gitkeep",
@@ -73,7 +85,12 @@ list_of_files=[
 
     # Tests
     "tests/__init__.py",
+    "tests/test_exception.py",
+    "tests/test_logger.py",
     "tests/test_data_ingestion.py",
+    "tests/test_chunking.py",
+    "tests/test_embedding.py",
+    "tests/test_vectorstore.py",
     "tests/test_retrieval.py",
     "tests/test_reranking.py",
 
