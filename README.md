@@ -19,7 +19,7 @@ The project focuses on:
 - [x] Project scaffold
 - [x] Exception handling
 - [x] Logging framework
-- [ ] Configuration management
+- [x] Configuration management
 - [ ] Data ingestion
 - [ ] Chunking
 - [ ] Embeddings
