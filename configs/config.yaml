@@ -1,8 +1,18 @@
-data:
-  docs_path: data/docs.txt
-
-retrieval:
-  top_k: 5
+data_ingestion:
+  data_directory: data/
+  
+  supported_formats:
+    - pdf
+    - docx
+    - txt
+    - md
 
 embedding:
   model_name: sentence-transformers/all-MiniLM-L6-v2
+
+chunking:
+  chunk_size: 1000
+  chunk_overlap: 200
+
+retrieval:
+  top_k: 5

@@ -24,8 +24,6 @@ list_of_files=[
     f"src/{project_name}/config/__init__.py",
     f"src/{project_name}/config/configuration.py",
 
-    f"src/{project_name}/entities/__init__.py",
-
     f"src/{project_name}/utils/__init__.py",
     f"src/{project_name}/utils/common.py",
 
@@ -36,9 +34,11 @@ list_of_files=[
     f"src/{project_name}/components/data_transformation.py",
     f"src/{project_name}/components/chunking.py",
     f"src/{project_name}/components/embedding.py",
-    f"src/{project_name}/components/vectorstore.py",
+    f"src/{project_name}/components/vector_store.py",
     f"src/{project_name}/components/retrieval.py",
     f"src/{project_name}/components/reranking.py",
+    f"src/{project_name}/components/llm_generator.py",
+    f"src/{project_name}/components/prompt_builder.py",
 
     # Core
     f"src/{project_name}/core/__init__.py",
@@ -50,9 +50,12 @@ list_of_files=[
 
     # Entity
     f"src/{project_name}/entity/__init__.py",
+    f"src/{project_name}/entity/artifact_entity.py",
+    f"src/{project_name}/entity/config_entity.py",
 
     # Schema
     f"src/{project_name}/schema/__init__.py",
+    f"src/{project_name}/schema/document_schema.py",
 
     # Evaluation
     f"src/{project_name}/evaluation/__init__.py",
@@ -86,11 +89,12 @@ list_of_files=[
     # Tests
     "tests/__init__.py",
     "tests/test_exception.py",
+    "tests/test_configuration.py",
     "tests/test_logger.py",
     "tests/test_data_ingestion.py",
     "tests/test_chunking.py",
     "tests/test_embedding.py",
-    "tests/test_vectorstore.py",
+    "tests/test_vector_store.py",
     "tests/test_retrieval.py",
     "tests/test_reranking.py",
 
