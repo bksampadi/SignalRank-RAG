@@ -1,11 +1,11 @@
 data_ingestion:
-  data_directory: data/
-  
-  supported_formats:
-    - pdf
-    - docx
-    - txt
-    - md
+  source_path: data/
+  recursive: true
+  encoding: utf-8
+  supported_extensions:
+    - .txt
+    - .md
+    - .markdown
 
 embedding:
   model_name: sentence-transformers/all-MiniLM-L6-v2
