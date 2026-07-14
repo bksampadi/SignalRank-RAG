@@ -5,7 +5,10 @@ from pathlib import Path
 from typing import Iterator
 
 from src.signalrank.entity.config_entity import DataIngestionConfig
-from src.signalrank.entity.artifact_entity import (DataIngestionArtifact,IngestedDocument)
+from src.signalrank.entity.artifact_entity import (
+    DataIngestionArtifact,
+    IngestedDocument,
+    )
 
 from src.signalrank.exception.exception import SignalRankException
 from src.signalrank.logging.logger import logging
