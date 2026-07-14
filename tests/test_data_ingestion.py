@@ -133,8 +133,8 @@ def test_document_id_is_portable_and_content_sensitive(tmp_path):
     first_id = first_artifact.documents[0].doc_id
     second_id = second_artifact.documents[0].doc_id
 
-    """ Absolute root directories differ, but the portable source
-    reference and document content are identical. """
+    # Absolute root directories differ, but the portable source
+    # reference and document content are identical.
 
     assert first_id == second_id
 
