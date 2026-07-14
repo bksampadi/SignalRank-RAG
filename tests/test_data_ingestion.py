@@ -46,7 +46,7 @@ def test_ingests_supported_files_recursively(tmp_path):
     (nested / "ignored.pdf").write_bytes(b"Not a supported document")
 
     config = DataIngestionConfig(
-        source_path= corpus,
+        source_path=corpus,
         recursive=True,
     )
 

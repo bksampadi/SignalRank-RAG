@@ -63,7 +63,7 @@ class DataIngestion:
         try:
             logging.info("Starting data ingestion from: %s", self.source_path)
 
-            files= list(self._collect_files())
+            files = list(self._collect_files())
 
             if not files:
                 raise FileNotFoundError(
