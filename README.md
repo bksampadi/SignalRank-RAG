@@ -1,5 +1,7 @@
 # SignalRank-RAG
 
+[![CI](https://github.com/bksampadi/SignalRank-RAG/actions/workflows/ci.yml/badge.svg)](https://github.com/bksampadi/SignalRank-RAG/actions/workflows/ci.yml)
+
 SignalRank-RAG is an open-source framework for building and evaluating Retrieval-Augmented Generation (RAG) systems.
 
 The project focuses on:
@@ -12,7 +14,19 @@ The project focuses on:
 - Evaluation
 - Production deployment
 
-🚧 Early-stage project under active development.
+## Currently Implemented
+
+- Recursive TXT and Markdown ingestion
+- Portable relative source references
+- Deterministic, content-sensitive document IDs
+- Empty and unsupported-file handling
+- 12 automated tests
+
+## Development Setup
+
+```bash
+python -m pip install -e ".[dev]"
+python -m pytest -v
 
 ## Roadmap
 
@@ -20,7 +34,7 @@ The project focuses on:
 - [x] Exception handling
 - [x] Logging framework
 - [x] Configuration management
-- [ ] Data ingestion
+- [x] Data ingestion
 - [ ] Chunking
 - [ ] Embeddings
 - [ ] Vector stores
@@ -28,3 +42,4 @@ The project focuses on:
 - [ ] Reranking
 - [ ] Evaluation
 - [ ] API deployment
+
