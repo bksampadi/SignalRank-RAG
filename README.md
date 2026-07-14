@@ -27,6 +27,7 @@ The project focuses on:
 ```bash
 python -m pip install -e ".[dev]"
 python -m pytest -v
+```
 
 ## Roadmap
 
