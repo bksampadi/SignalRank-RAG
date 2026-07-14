@@ -16,7 +16,4 @@ class DocumentRecord:
     author: Optional[str] = None
     created_at: Optional[str] = None
 
-    signal_score: Optional[float] = None
-    signal_type: Optional[str] = None
-
     chunk_id: Optional[str] = None
