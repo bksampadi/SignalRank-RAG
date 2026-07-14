@@ -1,2 +1,12 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
 [project]
+name = "signalrank-rag"
+version = "0.1.0"
+description = "A signal-aware retrieval and ranking system"
 requires-python = ">=3.11,<3.14"
+
+[tool.setuptools.packages.find]
+where = ["src"]

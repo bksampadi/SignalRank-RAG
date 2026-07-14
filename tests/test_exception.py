@@ -1,7 +1,7 @@
 import pytest
 import sys
 
-from src.signalrank.exception.exception import SignalRankException
+from signalrank.exception.exception import SignalRankException
 
 def test_exception():
 

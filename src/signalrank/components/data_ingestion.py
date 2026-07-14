@@ -4,15 +4,15 @@ import sys
 from pathlib import Path
 from typing import Iterator
 
-from src.signalrank.entity.config_entity import DataIngestionConfig
-from src.signalrank.entity.artifact_entity import (
+from signalrank.entity.config_entity import DataIngestionConfig
+from signalrank.entity.artifact_entity import (
     DataIngestionArtifact,
     IngestedDocument,
     )
 
-from src.signalrank.exception.exception import SignalRankException
-from src.signalrank.logging.logger import logging
-from src.signalrank.utils.common import (
+from signalrank.exception.exception import SignalRankException
+from signalrank.logging.logger import logging
+from signalrank.utils.common import (
     create_document_id,
     get_file_metadata,
     read_text_file,
@@ -29,8 +29,34 @@ class DataIngestion:
         self.config = config
         self.source_path = Path(config.source_path)
         self.supported_extensions = tuple(
-            ext.lower() for ext in config.supported_extensions
+            dict.fromkeys(
+                self._normalise_extensions(ext)
+                for ext in config.supported_extensions
+            )
         )
+
+    @staticmethod
+    def _normalise_extensions(extension: str) -> str:
+        """Normalize an extension to lowercase with a leading dot."""
+        extension = extension.strip().lower()
+
+        if not extension:
+            raise ValueError("Supported extensions cannot contain empty values")
+
+        if not extension.startswith("."):
+            extension = f".{extension}"
+
+        return extension
+
+    def _get_source_reference(self, file_path: Path) -> str:
+        """
+        Return a portable path relative to the configured source.
+        """
+
+        if self.source_path.is_dir():
+            return file_path.relative_to(self.source_path).as_posix()
+
+        return file_path.name
 
     def initiate_data_ingestion(self) -> DataIngestionArtifact:
         """Read supported files and return them as IngestedDocument objects"""
@@ -44,7 +70,7 @@ class DataIngestion:
                     f"No supported files found at {self.source_path}. "
                     f"Supported extensions: {self.supported_extensions}"
                 )
-            
+
             documents: list[IngestedDocument] = []
 
             for file_path in files:
@@ -57,11 +83,13 @@ class DataIngestion:
                     logging.warning("Skipping empty document: %s", file_path)
                     continue
 
+                source_reference = self._get_source_reference(file_path)
+
                 document = IngestedDocument(
-                    doc_id=create_document_id(file_path),
-                    source_path=str(file_path),
+                    doc_id=create_document_id(source_reference, text),
+                    source_path=source_reference,
                     text=text,
-                    metadata=get_file_metadata(file_path, text),
+                    metadata=get_file_metadata(source_reference, text),
                 )
 
                 documents.append(document)
@@ -70,12 +98,12 @@ class DataIngestion:
                 raise ValueError(
                     "Data Ingestion found files, but all documents were empty"
                 )
-            
+
             artifact = DataIngestionArtifact(
                 documents=documents,
                 total_documents=len(documents),
             )
-            
+
             logging.info(
                 "Data ingestion completed. Loaded %d documents.",
                 artifact.total_documents,
@@ -85,24 +113,24 @@ class DataIngestion:
 
         except Exception as e:
             raise SignalRankException(e, sys)
-        
+
     def _collect_files(self) -> Iterator[Path]:
         """Collect supported files from source path."""
         if not self.source_path.exists():
             raise FileNotFoundError(
                 f"Source path does not exist: {self.source_path}"
             )
-        
+
         if self.source_path.is_file():
             if self._is_supported_file(self.source_path):
                 yield self.source_path
                 return
-            
+
             raise ValueError(
                 f"Unsupported file type: {self.source_path.suffix}. "
                 f"Supported extensions: {self.supported_extensions}"
             )
-        
+
         if self.source_path.is_dir():
             pattern = "**/*" if self.config.recursive else "*"
 
@@ -111,11 +139,10 @@ class DataIngestion:
                     yield file_path
 
             return
-        
+
         raise ValueError(
             f"Source path is neither a file nor a directory: {self.source_path}"
         )
-    
+
     def _is_supported_file(self, file_path: Path) -> bool:
         return file_path.suffix.lower() in self.supported_extensions
-    

@@ -1,5 +1,5 @@
-from src.signalrank.logging.logger import logging
-from src.signalrank.logging.logger import LOG_FILE_PATH
+from signalrank.logging.logger import logging
+from signalrank.logging.logger import LOG_FILE_PATH
 from pathlib import Path
 
 def test_log_directory_exists():
