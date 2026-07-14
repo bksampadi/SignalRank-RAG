@@ -7,6 +7,14 @@ name = "signalrank-rag"
 version = "0.1.0"
 description = "A signal-aware retrieval and ranking system"
 requires-python = ">=3.11,<3.14"
+dependencies = [
+    "PyYAML>=6.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9.0,<10",
+]
 
 [tool.setuptools.packages.find]
 where = ["src"]
