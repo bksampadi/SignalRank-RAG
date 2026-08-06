@@ -9,6 +9,7 @@ description = "A signal-aware retrieval and ranking system"
 requires-python = ">=3.11,<3.14"
 dependencies = [
     "PyYAML>=6.0",
+    "python-box",
 ]
 
 [project.optional-dependencies]
@@ -18,6 +19,3 @@ dev = [
 
 [tool.setuptools.packages.find]
 where = ["src"]
-
-[tool.setuptools.package-data]
-"signalrank.config" = ["config.yaml"]
