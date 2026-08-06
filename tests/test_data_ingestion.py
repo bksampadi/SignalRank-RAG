@@ -1,8 +1,9 @@
 import pytest
 
 from signalrank.components.data_ingestion import DataIngestion
-from signalrank.entity.config_entity import DataIngestionConfig
+from signalrank.config.settings import DataIngestionConfig
 from signalrank.exception.exception import SignalRankException
+
 
 def test_ingests_single_text_file(tmp_path):
     source_file = tmp_path / "document.txt"
@@ -11,7 +12,12 @@ def test_ingests_single_text_file(tmp_path):
         encoding="utf-8",
     )
 
-    config = DataIngestionConfig(source_path=source_file)
+    config = DataIngestionConfig(
+        source_path=source_file,
+        recursive=True,
+        encoding="utf-8",
+        supported_extensions=(".txt", ".md", ".markdown"),
+    )
     artifact = DataIngestion(config).initiate_data_ingestion()
 
     assert artifact.total_documents == 1
@@ -160,6 +166,14 @@ def test_normalises_configured_extensions(tmp_path):
     assert artifact.total_documents == 1
 
 
+def test_invalid_extension_configuration_raises_value_error(tmp_path):
+    with pytest.raises(ValueError):
+        DataIngestionConfig(
+            source_path=tmp_path,
+            supported_extensions=("",),
+        )
+
+
 def test_missing_source_raises_signalrank_exception(tmp_path):
     missing_source = tmp_path / "missing"
 
@@ -180,3 +194,15 @@ def test_all_empty_documents_raise_signalrank_exception(tmp_path):
 
     with pytest.raises(SignalRankException):
         DataIngestion(config).initiate_data_ingestion()
+
+
+def test_data_ingestion_config_normalises_extensions(tmp_path):
+    config = DataIngestionConfig(
+        source_path = tmp_path,
+        recursive=True,
+        encoding="utf-8",
+        supported_extensions=(".TXT", ".md", ".txt"),
+    )
+
+    assert config.source_path == tmp_path
+    assert config.supported_extensions == (".txt", ".md")
