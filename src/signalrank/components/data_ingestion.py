@@ -4,12 +4,11 @@ import sys
 from pathlib import Path
 from typing import Iterator
 
-from signalrank.entity.config_entity import DataIngestionConfig
+from signalrank.config.settings import DataIngestionConfig
 from signalrank.entity.artifact_entity import (
     DataIngestionArtifact,
     IngestedDocument,
     )
-
 from signalrank.exception.exception import SignalRankException
 from signalrank.logging.logger import logging
 from signalrank.utils.common import (
@@ -18,6 +17,7 @@ from signalrank.utils.common import (
     read_text_file,
 )
 
+
 class DataIngestion:
     """
     Component responsible for loading raw documents from disk.
@@ -25,28 +25,10 @@ class DataIngestion:
     This component does not process the raw documents further.
     """
 
-    def __init__(self, config:DataIngestionConfig):
+    def __init__(self, config: DataIngestionConfig):
         self.config = config
-        self.source_path = Path(config.source_path)
-        self.supported_extensions = tuple(
-            dict.fromkeys(
-                self._normalise_extensions(ext)
-                for ext in config.supported_extensions
-            )
-        )
-
-    @staticmethod
-    def _normalise_extensions(extension: str) -> str:
-        """Normalize an extension to lowercase with a leading dot."""
-        extension = extension.strip().lower()
-
-        if not extension:
-            raise ValueError("Supported extensions cannot contain empty values")
-
-        if not extension.startswith("."):
-            extension = f".{extension}"
-
-        return extension
+        self.source_path = config.source_path
+        self.supported_extensions = config.supported_extensions
 
     def _get_source_reference(self, file_path: Path) -> str:
         """
@@ -59,7 +41,7 @@ class DataIngestion:
         return file_path.name
 
     def initiate_data_ingestion(self) -> DataIngestionArtifact:
-        """Read supported files and return them as IngestedDocument objects"""
+        """Read supported files and return them as IngestedDocument objects."""
         try:
             logging.info("Starting data ingestion from: %s", self.source_path)
 
@@ -77,7 +59,7 @@ class DataIngestion:
                 text = read_text_file(
                     file_path=file_path,
                     encoding=self.config.encoding,
-                    )
+                )
 
                 if not text.strip():
                     logging.warning("Skipping empty document: %s", file_path)
@@ -112,7 +94,7 @@ class DataIngestion:
             return artifact
 
         except Exception as e:
-            raise SignalRankException(e, sys)
+            raise SignalRankException(e, sys) from e
 
     def _collect_files(self) -> Iterator[Path]:
         """Collect supported files from source path."""
