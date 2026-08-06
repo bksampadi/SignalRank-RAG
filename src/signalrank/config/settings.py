@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from pathlib import Path
-from ensure import ensure_annotations
 from signalrank.config.settings_utils import normalise_supported_extensions
 
 

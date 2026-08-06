@@ -2,5 +2,4 @@ pytest
 PyYAML
 pandas
 python-box
-ensure
 notebook

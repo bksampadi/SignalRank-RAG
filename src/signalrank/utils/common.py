@@ -4,7 +4,6 @@ from box.exceptions import BoxValueError
 from box import ConfigBox
 import yaml
 
-from ensure import ensure_annotations
 import hashlib
 
 from pathlib import (
@@ -15,7 +14,7 @@ from pathlib import (
 from signalrank.logging.logger import logging
 from signalrank.exception.exception import SignalRankException
 
-@ensure_annotations
+
 def read_text_file(
         file_path: Path,
         encoding: str = "utf-8",
@@ -24,7 +23,7 @@ def read_text_file(
         encoding=encoding,
     )
 
-@ensure_annotations
+
 def create_document_id(
         source_reference: str,
         text: str,
