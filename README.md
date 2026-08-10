@@ -20,20 +20,25 @@ The project focuses on:
 - Portable relative source references
 - Deterministic, content-sensitive document IDs
 - Empty and unsupported-file handling
-- 12 automated tests
+- Structured observability and tracing with Logfire
+- Reproducible dependency management with uv
+- 14 automated tests
 
 ## Development Setup
 
+SignalRank-RAG uses uv for Python environment and dependency management.
+
 ```bash
-python -m pip install -e ".[dev]"
-python -m pytest -v
+uv sync --extra eval 
+uv run pytest -v
 ```
+The project currently targets Python 3.11 for local development.
 
 ## Roadmap
 
 - [x] Project scaffold
 - [x] Exception handling
-- [x] Logging framework
+- [x] Observability and tracing
 - [x] Configuration management
 - [x] Data ingestion
 - [ ] Chunking
