@@ -12,9 +12,12 @@ class DataIngestionConfig:
     recursive: bool = True
     encoding: str = "utf-8"
     supported_extensions: tuple[str, ...] = (
+        ".pdf",
         ".txt",
         ".md",
         ".markdown",
+        ".html",
+        ".htm",
     )
 
     def __post_init__(self) -> None:

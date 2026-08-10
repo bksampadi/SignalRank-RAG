@@ -1,4 +1,7 @@
+import pytest
+
 from signalrank.config.configuration import ConfigurationManager
+from signalrank.config.configuration import DataIngestionConfig
 
 
 def test_default_configuration_loading():
@@ -25,3 +28,27 @@ def test_default_configuration_loading():
     assert chunking["chunk_size"] == 1000
     assert chunking["chunk_overlap"] == 200
     assert retrieval["top_k"] == 5
+
+
+def test_invalid_extension_configuration_raises_value_error(
+    tmp_path,
+):
+    with pytest.raises(ValueError):
+        DataIngestionConfig(
+            source_path=tmp_path,
+            supported_extensions=("",),
+        )
+
+
+def test_data_ingestion_config_normalises_extensions(
+    tmp_path,
+):
+    config = DataIngestionConfig(
+        source_path=tmp_path,
+        recursive=True,
+        encoding="utf-8",
+    
+    )
+
+    assert config.source_path == tmp_path
+    

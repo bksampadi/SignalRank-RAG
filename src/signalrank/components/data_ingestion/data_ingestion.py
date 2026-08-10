@@ -2,30 +2,19 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
-from typing import Iterator
+from collections.abc import Iterator
 
 import logfire
 
-
+from signalrank.components.data_ingestion.document import ParsedDocument
+from signalrank.components.data_ingestion.registry import get_loader
 from signalrank.config.settings import DataIngestionConfig
-from signalrank.entity.artifact_entity import (
-    DataIngestionArtifact,
-    IngestedDocument,
-    )
 from signalrank.exception.exception import SignalRankException
-from signalrank.utils.common import (
-    create_document_id,
-    get_file_metadata,
-    read_text_file,
-)
+from signalrank.utils.common import create_document_id
 
 
 class DataIngestion:
-    """
-    Component responsible for loading raw documents from disk.
-
-    This component does not process the raw documents further.
-    """
+    """Discover supported files and load them into normalized documents."""
 
     def __init__(self, config: DataIngestionConfig):
         self.config = config
@@ -42,8 +31,11 @@ class DataIngestion:
 
         return file_path.name
 
-    def initiate_data_ingestion(self) -> DataIngestionArtifact:
-        """Read supported files and return them as IngestedDocument objects."""
+    def initiate_data_ingestion(self) -> list[ParsedDocument]:
+        """
+        Load supported files into normalized parsed documents.
+        """
+
         try:
             with logfire.span(
                 "Data ingestion",
@@ -54,7 +46,10 @@ class DataIngestion:
 
                 files = list(self._collect_files())
 
-                span.set_attribute("files_discovered", len(files))
+                span.set_attribute(
+                    "files_discovered", 
+                    len(files),
+                )
 
                 if not files:
                     raise FileNotFoundError(
@@ -62,61 +57,65 @@ class DataIngestion:
                         f"Supported extensions: {self.supported_extensions}"
                     )
 
-                documents: list[IngestedDocument] = []
-                skipped_empty = 0
+                documents: list[ParsedDocument] = []
+
 
                 for file_path in files:
-                    text = read_text_file(
-                        file_path=file_path,
-                        encoding=self.config.encoding,
+                    source_reference = self._get_source_reference(
+                        file_path
                     )
 
-                    if not text.strip():
-                        skipped_empty += 1
+                    loader = get_loader(
+                        file_path.suffix,
+                        encoding=self.config.encoding
+                    )
 
+                    elements = loader(file_path)
+
+                    if not elements:
                         logfire.warning(
-                            "Skipping empty document",
+                            "No extractable content found",
                             file_path=str(file_path),
                         )
                         continue
 
-                    source_reference = self._get_source_reference(file_path)
+                    combined_text = "\n".join(
+                        element.text for element in elements
+                    )
 
-                    document = IngestedDocument(
-                        doc_id=create_document_id(source_reference, text),
+                    document = ParsedDocument(
+                        doc_id=create_document_id(
+                            source_reference,
+                            combined_text,
+                        ),
                         source_path=source_reference,
-                        text=text,
-                        metadata=get_file_metadata(source_reference, text),
+                        file_type=file_path.suffix.lower(),
+                        elements=tuple(elements),
+                        metadata={
+                            "element_count": len(elements),
+                        },
                     )
 
                     documents.append(document)
 
                 if not documents:
                     raise ValueError(
-                        "Data Ingestion found files, but all documents were empty"
+                        "Data Ingestion produced no documents"
                     )
-
-                artifact = DataIngestionArtifact(
-                    documents=documents,
-                    total_documents=len(documents),
-                )
 
                 span.set_attribute(
                     "documents_loaded",
-                    artifact.total_documents,
-                )
-                span.set_attribute(
-                    "documents_skipped_empty",
-                    skipped_empty,
+                    len(documents),
                 )
 
-                return artifact
+                return documents
 
         except Exception as e:
             raise SignalRankException(e, sys) from e
 
     def _collect_files(self) -> Iterator[Path]:
-        """Collect supported files from source path."""
+        """Collect supported files from the configured source."""
+
         if not self.source_path.exists():
             raise FileNotFoundError(
                 f"Source path does not exist: {self.source_path}"
@@ -135,8 +134,13 @@ class DataIngestion:
         if self.source_path.is_dir():
             pattern = "**/*" if self.config.recursive else "*"
 
-            for file_path in sorted(self.source_path.glob(pattern)):
-                if file_path.is_file() and self._is_supported_file(file_path):
+            for file_path in sorted(
+                self.source_path.glob(pattern)
+            ):
+                if (
+                    file_path.is_file() 
+                    and self._is_supported_file(file_path)
+                ):
                     yield file_path
 
             return
@@ -147,4 +151,7 @@ class DataIngestion:
         )
 
     def _is_supported_file(self, file_path: Path) -> bool:
-        return file_path.suffix.lower() in self.supported_extensions
+        return (
+            file_path.suffix.lower() 
+            in self.supported_extensions
+        )

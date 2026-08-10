@@ -17,6 +17,7 @@ vectordb/
 vectorstore/
 
 # Data
+data/
 data/raw/
 data/interim/
 data/processed/
