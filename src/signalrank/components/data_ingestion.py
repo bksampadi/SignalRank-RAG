@@ -4,13 +4,15 @@ import sys
 from pathlib import Path
 from typing import Iterator
 
+import logfire
+
+
 from signalrank.config.settings import DataIngestionConfig
 from signalrank.entity.artifact_entity import (
     DataIngestionArtifact,
     IngestedDocument,
     )
 from signalrank.exception.exception import SignalRankException
-from signalrank.logging.logger import logging
 from signalrank.utils.common import (
     create_document_id,
     get_file_metadata,
@@ -43,55 +45,72 @@ class DataIngestion:
     def initiate_data_ingestion(self) -> DataIngestionArtifact:
         """Read supported files and return them as IngestedDocument objects."""
         try:
-            logging.info("Starting data ingestion from: %s", self.source_path)
+            with logfire.span(
+                "Data ingestion",
+                source_path=str(self.source_path),
+                recursive=self.config.recursive,
+                supported_extensions=self.supported_extensions,
+            ) as span:
 
-            files = list(self._collect_files())
+                files = list(self._collect_files())
 
-            if not files:
-                raise FileNotFoundError(
-                    f"No supported files found at {self.source_path}. "
-                    f"Supported extensions: {self.supported_extensions}"
+                span.set_attribute("files_discovered", len(files))
+
+                if not files:
+                    raise FileNotFoundError(
+                        f"No supported files found at {self.source_path}. "
+                        f"Supported extensions: {self.supported_extensions}"
+                    )
+
+                documents: list[IngestedDocument] = []
+                skipped_empty = 0
+
+                for file_path in files:
+                    text = read_text_file(
+                        file_path=file_path,
+                        encoding=self.config.encoding,
+                    )
+
+                    if not text.strip():
+                        skipped_empty += 1
+
+                        logfire.warning(
+                            "Skipping empty document",
+                            file_path=str(file_path),
+                        )
+                        continue
+
+                    source_reference = self._get_source_reference(file_path)
+
+                    document = IngestedDocument(
+                        doc_id=create_document_id(source_reference, text),
+                        source_path=source_reference,
+                        text=text,
+                        metadata=get_file_metadata(source_reference, text),
+                    )
+
+                    documents.append(document)
+
+                if not documents:
+                    raise ValueError(
+                        "Data Ingestion found files, but all documents were empty"
+                    )
+
+                artifact = DataIngestionArtifact(
+                    documents=documents,
+                    total_documents=len(documents),
                 )
 
-            documents: list[IngestedDocument] = []
-
-            for file_path in files:
-                text = read_text_file(
-                    file_path=file_path,
-                    encoding=self.config.encoding,
+                span.set_attribute(
+                    "documents_loaded",
+                    artifact.total_documents,
+                )
+                span.set_attribute(
+                    "documents_skipped_empty",
+                    skipped_empty,
                 )
 
-                if not text.strip():
-                    logging.warning("Skipping empty document: %s", file_path)
-                    continue
-
-                source_reference = self._get_source_reference(file_path)
-
-                document = IngestedDocument(
-                    doc_id=create_document_id(source_reference, text),
-                    source_path=source_reference,
-                    text=text,
-                    metadata=get_file_metadata(source_reference, text),
-                )
-
-                documents.append(document)
-
-            if not documents:
-                raise ValueError(
-                    "Data Ingestion found files, but all documents were empty"
-                )
-
-            artifact = DataIngestionArtifact(
-                documents=documents,
-                total_documents=len(documents),
-            )
-
-            logging.info(
-                "Data ingestion completed. Loaded %d documents.",
-                artifact.total_documents,
-            )
-
-            return artifact
+                return artifact
 
         except Exception as e:
             raise SignalRankException(e, sys) from e
@@ -123,7 +142,8 @@ class DataIngestion:
             return
 
         raise ValueError(
-            f"Source path is neither a file nor a directory: {self.source_path}"
+            f"Source path is neither a file nor a directory: "
+            f"{self.source_path}"
         )
 
     def _is_supported_file(self, file_path: Path) -> bool:

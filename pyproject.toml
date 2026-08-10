@@ -7,15 +7,45 @@ name = "signalrank-rag"
 version = "0.1.0"
 description = "A signal-aware retrieval and ranking system"
 requires-python = ">=3.11,<3.14"
+
 dependencies = [
-    "PyYAML>=6.0",
-    "python-box",
+    # Configuration
+    "PyYAML>=6.0,<7",
+    "python-box>=7.4,<8",
+
+    # Observability
+    "logfire>=4.40,<5",
+
+    # Lexical retrieval
+    "bm25s>=0.3.10,<0.4",
+
+    # Dense retrieval / embeddings / reranking
+    "sentence-transformers>=5.7,<6",
+
+    # Vector store
+    "qdrant-client>=1.19,<2",
+
+    # API
+    "fastapi>=0.141,<1",
+    "uvicorn[standard]>=0.52,<1",
 ]
 
 [project.optional-dependencies]
+
+eval = [
+    "pandas>=3,<4",
+]
+
+[dependency-groups]
+
 dev = [
     "pytest>=9.0,<10",
+    "notebook",
 ]
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.logfire]
+service_name = "signalrank-rag"
+environment = "development"
