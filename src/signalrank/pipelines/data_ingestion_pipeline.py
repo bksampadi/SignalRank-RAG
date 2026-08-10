@@ -1,5 +1,5 @@
 from signalrank.config.configuration import ConfigurationManager
-from signalrank.components.data_ingestion import DataIngestion
+from signalrank.components.data_ingestion.data_ingestion import DataIngestion
 from signalrank.config.settings import DataIngestionConfig
 from signalrank.logging.logger import logging
 from signalrank.exception.exception import SignalRankException
