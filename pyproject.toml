@@ -12,22 +12,23 @@ dependencies = [
     # Configuration
     "PyYAML>=6.0,<7",
     "python-box>=7.4,<8",
-
     # Observability
     "logfire>=4.40,<5",
-
     # Lexical retrieval
     "bm25s>=0.3.10,<0.4",
-
     # Dense retrieval / embeddings / reranking
     "sentence-transformers>=5.7,<6",
-
     # Vector store
     "qdrant-client>=1.19,<2",
-
     # API
     "fastapi>=0.141,<1",
     "uvicorn[standard]>=0.52,<1",
+    "pymupdf",
+    "beautifulsoup4>=4.15.0",
+    "python-docx>=1.2.0",
+    "python-pptx>=1.0.2",
+    "openpyxl>=3.1.5",
+    "defusedxml>=0.7.1",
 ]
 
 [project.optional-dependencies]
