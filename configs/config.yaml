@@ -3,9 +3,15 @@ data_ingestion:
   recursive: true
   encoding: utf-8
   supported_extensions:
+    - .pdf
     - .txt
     - .md
     - .markdown
+    - .html
+    - .htm
+    - .docx
+    - .pptx
+    - .xlsx
 
 embedding:
   model_name: sentence-transformers/all-MiniLM-L6-v2
