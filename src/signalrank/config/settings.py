@@ -18,6 +18,9 @@ class DataIngestionConfig:
         ".markdown",
         ".html",
         ".htm",
+        ".docx",
+        ".pptx",
+        ".xlsx",
     )
 
     def __post_init__(self) -> None:

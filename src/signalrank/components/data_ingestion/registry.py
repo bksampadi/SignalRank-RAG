@@ -10,6 +10,7 @@ from signalrank.components.data_ingestion.document import DocumentElement
 from signalrank.components.data_ingestion.loaders.html import load_html
 from signalrank.components.data_ingestion.loaders.pdf import load_pdf
 from signalrank.components.data_ingestion.loaders.text import load_text
+from signalrank.components.data_ingestion.loaders.office import load_office
 
 
 Loader = Callable[[Path], list[DocumentElement]]
@@ -40,6 +41,9 @@ def get_loader(
             load_html,
             encoding=encoding,
         )
+
+    if extension in {".docx", ".pptx", ".xlsx"}:
+        return load_office
     
     raise ValueError(
         f"No loader registered for extension: {extension}"

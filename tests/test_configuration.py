@@ -16,9 +16,15 @@ def test_default_configuration_loading():
     assert ingestion["recursive"] is True
     assert ingestion["encoding"] == "utf-8"
     assert ingestion["supported_extensions"] == [
+        ".pdf",
         ".txt",
         ".md",
         ".markdown",
+        ".html",
+        ".htm",
+        ".docx",
+        ".pptx",
+        ".xlsx",
     ]
 
     assert embedding["model_name"] == (
