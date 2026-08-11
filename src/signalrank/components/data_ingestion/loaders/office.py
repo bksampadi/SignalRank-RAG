@@ -1,25 +1,42 @@
-from __future__ import annotations
-
+from collections.abc import Callable
 from pathlib import Path
 
 import logfire
-from unstructured.partition.auto import partition
+from unstructured.documents.elements import Element
+from unstructured.partition.docx import partition_docx
+from unstructured.partition.pptx import partition_pptx
+from unstructured.partition.xlsx import partition_xlsx
 
 from signalrank.components.data_ingestion.document import DocumentElement
+
+_PARTITIONERS: dict[str, Callable[..., list[Element]]] = {
+    ".docx": partition_docx,
+    ".pptx": partition_pptx,
+    ".xlsx": partition_xlsx,
+}
 
 
 def load_office(file_path: Path) -> list[DocumentElement]:
     """
-    Extract structured elements from DOCX, PPTX, and XLSX documents.
+    Load an Office document into structured document elements.
     """
+
+    extension = file_path.suffix.lower()
+
+    try:
+        partitioner = _PARTITIONERS[extension]
+    except KeyError as exc:
+        raise ValueError(
+        f"Unsupported Office file type: {extension}"
+        ) from exc
 
     with logfire.span(
         "Load Office document",
         file_path=str(file_path),
-        file_type=file_path.suffix.lower(),
+        file_type=extension,
     ) as span:
 
-        raw_elements = partition(
+        raw_elements = partitioner(
             filename=str(file_path),
         )
 
@@ -31,7 +48,11 @@ def load_office(file_path: Path) -> list[DocumentElement]:
             if not text:
                 continue
 
-            metadata = raw_element.metadata.to_dict()
+            metadata = (
+                raw_element.metadata.to_dict()
+                if raw_element.metadata is not None
+                else {}
+            )
 
             elements.append(
                 DocumentElement(
