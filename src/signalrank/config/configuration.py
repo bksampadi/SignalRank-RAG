@@ -3,8 +3,11 @@ from __future__ import annotations
 from box import ConfigBox
 
 from signalrank.constants import CONFIG_FILE_PATH
-from signalrank.config.settings import DataIngestionConfig
 from signalrank.utils.common import read_yaml
+from signalrank.config.settings import (
+    DataIngestionConfig,
+    ChunkingConfig,
+)
 
 
 class ConfigurationManager:
@@ -25,7 +28,7 @@ class ConfigurationManager:
             self,
     ) -> DataIngestionConfig:
         """Return validated data-ingestion configuration."""
-        
+
         config = self.config.data_ingestion
         
         return DataIngestionConfig(
@@ -35,4 +38,16 @@ class ConfigurationManager:
             supported_extensions=tuple(
                 config.supported_extensions
             ),
+        )
+
+    def get_chunking_config(self) -> ChunkingConfig:
+        """
+        Return a validated chunking configuration.
+        """
+
+        config = self.config.chunking
+
+        return ChunkingConfig(
+            chunk_size=config.chunk_size,
+            chunk_overlap=config.chunk_overlap,
         )
