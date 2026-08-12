@@ -24,9 +24,14 @@ The project focuses on:
 - Preservation of document and element provenance
 - SentenceTransformer embedding provider
 - BM25 lexical retrieval
+- Dense semantic retrieval
+- Qdrant vector store integration
+- Shared retrieval interface and ranked search result model
+- Retrieval service supporting BM25 and dense modes
+- Local FastAPI retrieval API with health and retrieval endpoints
 - Structured observability and tracing with Logfire
 - Reproducible dependency management with uv
-- 25 automated tests
+- 35 automated tests
 
 ## Development Setup
 
@@ -36,7 +41,16 @@ SignalRank-RAG uses uv for Python environment and dependency management.
 uv sync --extra eval 
 uv run pytest -v
 ```
-The project currently targets Python 3.11 for local development.
+
+Run the local API:
+
+```bash
+uv run uvicorn signalrank.api.app:app --reload
+```
+
+Interactive API documentation is available locally at `/docs`.
+
+Continuous integration currently tests Python 3.11–3.13 on Ubuntu and Python 3.11 on Windows.
 
 ## Roadmap
 
@@ -50,8 +64,9 @@ The project currently targets Python 3.11 for local development.
 - [x] Embedding provider abstraction
 - [x] SentenceTransformer embedding baseline
 - [x] BM25 lexical retrieval
-- [ ] Vector stores
-- [ ] Dense Retrieval
+- [x] Qdrant vector store
+- [x] Dense retrieval
+- [x] Local FastAPI API
 - [ ] Reranking
 - [ ] Evaluation
 - [ ] API deployment
