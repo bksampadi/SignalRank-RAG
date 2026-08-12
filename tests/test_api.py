@@ -1,6 +1,6 @@
 from fastapi.testclient import TestClient
 
-from signalrank.api.app import app
+from signalrank.api.main import app
 from signalrank.components.retrieval.result import SearchResult
 
 
