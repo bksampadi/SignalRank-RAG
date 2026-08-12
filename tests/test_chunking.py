@@ -138,7 +138,7 @@ def test_empty_elements_produce_no_chunks():
 
 
 def test_chunking_configuration_loading():
-    config = ConfigurationManager().get_chunking_config()
+    config = ConfigurationManager().load()
 
-    assert config.chunk_size == 1000
-    assert config.chunk_overlap == 200
+    assert config.chunking.chunk_size == 1000
+    assert config.chunking.chunk_overlap == 200

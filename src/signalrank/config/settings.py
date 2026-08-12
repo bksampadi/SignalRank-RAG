@@ -52,3 +52,88 @@ class ChunkingConfig:
             raise ValueError(
                 "chunk_overlap must be smaller than chunk_size"
             )
+
+@dataclass(frozen=True)
+class EmbeddingConfig:
+    """Configuration for the embedding provider."""
+
+    model_name: str = (
+        "sentence-transformers/all-MiniLM-L6-v2"
+    )
+
+    def __post_init__(self) -> None:
+        if not self.model_name.strip():
+            raise ValueError(
+                "model_name cannot be empty"
+            )
+
+
+@dataclass(frozen=True)
+class RetrievalConfig:
+    """Configuration for retrieval."""
+
+    top_k: int = 5
+
+    def __post_init__(self) -> None:
+        if self.top_k <= 0:
+            raise ValueError(
+                "top_k must be greater than zero"
+            )
+
+
+@dataclass(frozen=True)
+class QdrantConfig:
+    """Configuration for the Qdrant vector store."""
+
+    collection_name: str = "signalrank_finewiki"
+    path: Path = Path("data/qdrant")
+
+    def __post_init__(self) -> None:
+        object.__setattr__(
+            self,
+            "path",
+            Path(self.path),
+        )
+
+        if not self.collection_name.strip():
+            raise ValueError(
+                "collection_name cannot be empty"
+            )
+
+
+@dataclass(frozen=True)
+class LogfireConfig:
+    """Configuration for Logfire observability."""
+
+    service_name: str = "signalrank-rag"
+    environment: str = "local"
+    system_metrics: bool = False
+
+
+@dataclass(frozen=True)
+class FineWikiConfig:
+    """Configuration for FineWiki ingestion."""
+
+    language: str = "enwiki"
+    batch_size: int = 256
+
+    def __post_init__(self) -> None:
+        if not self.language.strip():
+            raise ValueError(
+                "language cannot be empty"
+            )
+
+        if self.batch_size <= 0:
+            raise ValueError(
+                "batch_size must be greater than zero"
+            )
+
+@dataclass(frozen=True)
+class AppConfig:
+    data_ingestion: DataIngestionConfig
+    chunking: ChunkingConfig
+    embedding: EmbeddingConfig
+    retrieval: RetrievalConfig
+    qdrant: QdrantConfig
+    logfire: LogfireConfig
+    finewiki: FineWikiConfig
