@@ -17,9 +17,13 @@ The project focuses on:
 ## Currently Implemented
 
 - Recursive TXT and Markdown ingestion
+- Structured DOCX, PPTX, and XLSX ingestion
 - Portable relative source references
 - Deterministic, content-sensitive document IDs
-- Empty and unsupported-file handling
+- Deterministic chunking with configurable overlap
+- Preservation of document and element provenance
+- SentenceTransformer embedding provider
+- BM25 lexical retrieval
 - Structured observability and tracing with Logfire
 - Reproducible dependency management with uv
 - 25 automated tests
