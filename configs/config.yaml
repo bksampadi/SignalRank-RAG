@@ -22,3 +22,16 @@ chunking:
 
 retrieval:
   top_k: 5
+
+qdrant:
+  collection_name: signalrank_finewiki
+  path: data/qdrant
+
+logfire:
+  service_name: signalrank-rag
+  environment: local
+  system_metrics: false
+
+finewiki:
+  language: enwiki
+  batch_size: 256

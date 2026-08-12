@@ -30,6 +30,9 @@ dependencies = [
     "openpyxl>=3.1.5",
     "defusedxml>=0.7.1",
     "unstructured[docx,pptx,xlsx]>=0.22.18",
+    "streamlit>=1.61.1",
+    "requests>=2.34.2",
+    "datasets>=5.0.1",
 ]
 
 [project.optional-dependencies]
