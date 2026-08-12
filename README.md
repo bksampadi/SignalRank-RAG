@@ -25,48 +25,25 @@ The project focuses on:
 ```mermaid
 flowchart TB
 
-    subgraph INDEXING["Corpus / Indexing"]
-        direction TB
+    DOCS[Documents] --> ING[Ingestion]
+    ING --> CHUNK[Deterministic Chunking]
 
-        DOCS[Documents]
-        ING[Document Ingestion]
-        CHUNK[Deterministic Chunking]
+    CHUNK --> BMIDX[(BM25 Index)]
+    CHUNK --> EMB[SentenceTransformer]
+    EMB --> QD[(Qdrant)]
 
-        DOCS --> ING --> CHUNK
+    USER[User] --> UI[Streamlit]
+    UI --> API[FastAPI]
+    API --> SERVICE[Retrieval Service]
 
-        CHUNK --> EMB[SentenceTransformer Embeddings]
-        EMB --> QD[(Qdrant)]
+    SERVICE --> BM25[BM25 Retrieval]
+    SERVICE --> DENSE[Dense Retrieval]
 
-        CHUNK --> BMIDX[BM25 Index]
-    end
-
-    subgraph RETRIEVAL["Query-time Retrieval"]
-        direction LR
-
-        USER[User]
-        UI[Streamlit UI]
-        API[FastAPI]
-        SERVICE[Retrieval Service]
-
-        DENSE[Dense Retrieval]
-        BM25[BM25 Retrieval]
-
-        RESULTS[Ranked Results]
-
-        USER --> UI --> API --> SERVICE
-        SERVICE --> DENSE
-        SERVICE --> BM25
-        DENSE --> RESULTS
-        BM25 --> RESULTS
-    end
-
-    QD --> DENSE
     BMIDX --> BM25
+    QD --> DENSE
 
-    LF[Logfire Distributed Tracing]
-    LF -.-> UI
-    LF -.-> API
-    LF -.-> SERVICE
+    BM25 --> RESULTS[Ranked Results]
+    DENSE --> RESULTS
 ```
 
 ## Currently Implemented
