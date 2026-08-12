@@ -1,5 +1,3 @@
-import pytest
-
 from signalrank.components.embeddings.sentence_transformer import SentenceTransformer, SentenceTransformerEmbedding
 
 def test_embedding_dimension():
