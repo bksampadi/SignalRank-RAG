@@ -22,7 +22,7 @@ The project focuses on:
 - Empty and unsupported-file handling
 - Structured observability and tracing with Logfire
 - Reproducible dependency management with uv
-- 14 automated tests
+- 25 automated tests
 
 ## Development Setup
 
@@ -41,10 +41,13 @@ The project currently targets Python 3.11 for local development.
 - [x] Observability and tracing
 - [x] Configuration management
 - [x] Data ingestion
-- [ ] Chunking
-- [ ] Embeddings
+- [x] Structured Office document ingestion
+- [x] Deterministic chunking
+- [x] Embedding provider abstraction
+- [x] SentenceTransformer embedding baseline
+- [x] BM25 lexical retrieval
 - [ ] Vector stores
-- [ ] Retrieval
+- [ ] Dense Retrieval
 - [ ] Reranking
 - [ ] Evaluation
 - [ ] API deployment
