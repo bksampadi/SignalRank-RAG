@@ -10,7 +10,7 @@ ENV UV_LINK_MODE=copy
 COPY pyproject.toml uv.lock ./
 
 RUN uv sync \
-    --froze \
+    --frozen \
     --no-dev \
     --no-install-project
 

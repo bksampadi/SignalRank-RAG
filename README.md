@@ -45,7 +45,7 @@ uv run pytest -v
 Run the local API:
 
 ```bash
-uv run uvicorn signalrank.api.app:app --reload
+uv run uvicorn signalrank.api.main:app --reload
 ```
 
 Interactive API documentation is available locally at `/docs`.
