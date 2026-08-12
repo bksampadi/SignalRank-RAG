@@ -43,6 +43,7 @@ eval = [
 dev = [
     "pytest>=9.0,<10",
     "notebook",
+    "httpx2>=2.10.0",
 ]
 
 [tool.setuptools.packages.find]
