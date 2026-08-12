@@ -7,6 +7,10 @@ services:
       --port 8000
     ports:
       - "8000:8000"
+    environment:
+      LOGFIRE_TOKEN: ${LOGFIRE_TOKEN}
+      LOGFIRE_SERVICE_NAME: signalrank-api
+      LOGFIRE_SERVICE_VERSION: 0.1.0
 
   ui:
     build: .
@@ -18,5 +22,8 @@ services:
       - "8501:8501"
     environment:
       SIGNALRANK_API_URL: http://api:8000
+      LOGFIRE_TOKEN: ${LOGFIRE_TOKEN}
+      LOGFIRE_SERVICE_NAME: signalrank-ui
+      LOGFIRE_SERVICE_VERSION: 0.1.0
     depends_on:
       - api

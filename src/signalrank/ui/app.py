@@ -1,5 +1,8 @@
 import os
 
+import uuid
+
+import logfire
 import requests
 import streamlit as st
 
@@ -8,6 +11,25 @@ API_URL = os.getenv(
     "SIGNALRANK_API_URL",
     "http://127.0.0.1:8000",
 )
+
+@st.cache_resource
+def configure_logfire():
+    try:
+        logfire.configure(
+            send_to_logfire="if-token-present",
+        )
+        logfire.instrument_requests()
+        return True
+    except Exception as exc:
+        print(f"Logfire initialization failed: {exc}")
+        return False
+
+
+LOGFIRE_ENABLED = configure_logfire()
+
+
+if "session_id" not in st.session_state:
+    st.session_state.session_id = str(uuid.uuid4()) 
 
 
 st.set_page_config(
@@ -61,56 +83,70 @@ if search:
         st.warning("Enter a query first.")
 
     else:
-        with st.spinner("Searching the corpus..."):
-            try:
-                selected_mode = mode or "Dense"
+        selected_mode = mode or "Dense"
 
-                response = requests.post(
-                    f"{API_URL}/retrieve",
-                    json={
-                        "query": query,
-                        "mode": selected_mode.lower(),
-                        "top_k": top_k,
-                    },
-                    timeout=30,
-                )
+        with logfire.span(
+            "retrieval search",
+            session_id=st.session_state.session_id,
+            retrieval_mode=selected_mode.lower(),
+            top_k=top_k,
+            query_length=len(query),
+        ):
+            with st.spinner("Searching the corpus..."):
+                try:
 
-                response.raise_for_status()
-                data = response.json()
+                    response = requests.post(
+                        f"{API_URL}/retrieve",
+                        json={
+                            "query": query,
+                            "mode": selected_mode.lower(),
+                            "top_k": top_k,
+                        },
+                        timeout=30,
+                    )
 
-            except requests.RequestException:
-                st.error(
-                    "SignalRank-RAG could not reach "
-                    "the retrieval service."
-                )
+                    response.raise_for_status()
+                    data = response.json()
 
-            else:
-                results = data["results"]
+                except requests.RequestException as exc:
+                    logfire.error(
+                        "Retrieval service request failed",
+                        error=str(exc),
+                        session_id=st.session_state.session_id,
+                    )
 
-                st.write("")
-                st.subheader(
-                    f"{len(results)} results"
-                )
+                    st.error(
+                        "SignalRank-RAG could not reach "
+                        "the retrieval service."
+                    )
 
-                for result in results:
-                    with st.container(border=True):
-                        header, score = st.columns(
-                            [4, 1]
-                        )
+                else:
+                    results = data["results"]
 
-                        with header:
-                            st.markdown(
-                                f"**Result {result['rank']}**"
+                    st.write("")
+                    st.subheader(
+                        f"{len(results)} results"
+                    )
+
+                    for result in results:
+                        with st.container(border=True):
+                            header, score = st.columns(
+                                [4, 1]
                             )
 
-                        with score:
-                            st.markdown(
-                                f"{result['score']:.3f}"
+                            with header:
+                                st.markdown(
+                                    f"**Result {result['rank']}**"
+                                )
+
+                            with score:
+                                st.markdown(
+                                    f"{result['score']:.3f}"
+                                )
+
+                            st.write(result["text"])
+
+                            st.caption(
+                                result["source_path"]
                             )
-
-                        st.write(result["text"])
-
-                        st.caption(
-                            result["source_path"]
-                        )
 

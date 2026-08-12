@@ -13,7 +13,7 @@ dependencies = [
     "PyYAML>=6.0,<7",
     "python-box>=7.4,<8",
     # Observability
-    "logfire>=4.40,<5",
+    "logfire[fastapi,requests]>=4.40,<5",
     # Lexical retrieval
     "bm25s>=0.3.10,<0.4",
     # Dense retrieval / embeddings / reranking
