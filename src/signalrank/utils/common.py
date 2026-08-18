@@ -1,14 +1,10 @@
-from __future__ import annotations
-
 import hashlib
-import sys
 from pathlib import Path
 
+import logfire
 import yaml
 from box import ConfigBox
 from box.exceptions import BoxValueError
-
-from signalrank.exception.exception import SignalRankException
 
 
 def create_document_id(
@@ -37,24 +33,49 @@ def create_document_id(
 def read_yaml(path_to_yaml: Path) -> ConfigBox:
     """Read a YAML configuration file."""
 
-    try:
-        with path_to_yaml.open(
-            "r",
-            encoding="utf-8",
-        ) as yaml_file:
-            content = yaml.safe_load(yaml_file)
+    with logfire.span(
+        "Read YAML configuration",
+        file_path=str(path_to_yaml),
+    ):
+        try:
+            with path_to_yaml.open(
+                "r",
+                encoding="utf-8",
+            ) as yaml_file:
+                content = yaml.safe_load(yaml_file)
 
-        if content is None:
-            raise ValueError(
-                f"YAML file is empty: {path_to_yaml}"
+            if content is None:
+                logfire.error(
+                    "YAML configuration is empty",
+                    file_path=str(path_to_yaml),
+                )
+                raise ValueError(
+                    f"YAML file is empty: {path_to_yaml}"
+                )
+            
+            return ConfigBox(content)
+
+        except yaml.YAMLError as exc:
+            logfire.error(
+                "Invalid YAML configuration",
+                file_path=str(path_to_yaml),
             )
+            raise ValueError(
+                f"Invalid YAML configuration: {path_to_yaml}"
+            ) from exc
         
-        return ConfigBox(content)
-    
-    except BoxValueError as exc:
-        raise ValueError(
-            f"Invalid yaml configuration: {path_to_yaml}"
-        ) from exc
-    
-    except Exception as e:
-        raise SignalRankException (e, sys) from e
+        except BoxValueError as exc:
+            logfire.error(
+                "Invalid YAML configuration structure",
+                file_path=str(path_to_yaml),
+            )
+            raise ValueError(
+                f"Invalid yaml configuration: {path_to_yaml}"
+            ) from exc
+        
+        except Exception:
+            logfire.exception(
+                "Failed to read YAML configuration",
+                file_path=str(path_to_yaml),
+            )
+            raise

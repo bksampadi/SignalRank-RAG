@@ -1,6 +1,3 @@
-from __future__ import annotations
-
-
 from signalrank.constants import CONFIG_FILE_PATH
 from signalrank.utils.common import read_yaml
 from signalrank.config.settings import (

@@ -1,6 +1,3 @@
-from __future__ import annotations
-
-import sys
 from pathlib import Path
 from collections.abc import Iterator
 
@@ -9,7 +6,6 @@ import logfire
 from signalrank.components.data_ingestion.document import ParsedDocument
 from signalrank.components.data_ingestion.registry import get_loader
 from signalrank.config.settings import DataIngestionConfig
-from signalrank.exception.exception import SignalRankException
 from signalrank.utils.common import create_document_id
 
 
@@ -21,29 +17,18 @@ class DataIngestion:
         self.source_path = config.source_path
         self.supported_extensions = config.supported_extensions
 
-    def _get_source_reference(self, file_path: Path) -> str:
-        """
-        Return a portable path relative to the configured source.
-        """
-
-        if self.source_path.is_dir():
-            return file_path.relative_to(self.source_path).as_posix()
-
-        return file_path.name
 
     def initiate_data_ingestion(self) -> list[ParsedDocument]:
         """
         Load supported files into normalized parsed documents.
         """
-
-        try:
-            with logfire.span(
-                "Data ingestion",
-                source_path=str(self.source_path),
-                recursive=self.config.recursive,
-                supported_extensions=self.supported_extensions,
-            ) as span:
-
+        with logfire.span(
+            "Data ingestion",
+            source_path=str(self.source_path),
+            recursive=self.config.recursive,
+            supported_extensions=self.supported_extensions,
+        ) as span:
+            try:
                 files = list(self._collect_files())
 
                 span.set_attribute(
@@ -66,7 +51,7 @@ class DataIngestion:
                     )
 
                     loader = get_loader(
-                        file_path.suffix,
+                        file_path.suffix.lower(),
                         encoding=self.config.encoding
                     )
 
@@ -83,24 +68,24 @@ class DataIngestion:
                         element.text for element in elements
                     )
 
-                    document = ParsedDocument(
-                        doc_id=create_document_id(
-                            source_reference,
+                    documents.append(
+                        ParsedDocument(
+                            doc_id=create_document_id(
+                                source_reference,
                             combined_text,
-                        ),
-                        source_path=source_reference,
-                        file_type=file_path.suffix.lower(),
-                        elements=tuple(elements),
-                        metadata={
-                            "element_count": len(elements),
-                        },
+                            ),
+                            source_path=source_reference,
+                            file_type=file_path.suffix.lower(),
+                            elements=tuple(elements),
+                            metadata={
+                                "element_count": len(elements),
+                            },
+                        )
                     )
-
-                    documents.append(document)
 
                 if not documents:
                     raise ValueError(
-                        "Data Ingestion produced no documents"
+                        "Data ingestion produced no documents"
                     )
 
                 span.set_attribute(
@@ -110,9 +95,23 @@ class DataIngestion:
 
                 return documents
 
-        except Exception as e:
-            raise SignalRankException(e, sys) from e
+            except Exception:
+                logfire.exception(
+                    "Data ingestion failed",
+                    source_path = str(self.source_path),
+                )
+                raise 
 
+    def _get_source_reference(self, file_path: Path) -> str:
+        """
+        Return a portable path relative to the configured source.
+        """
+
+        if self.source_path.is_dir():
+            return file_path.relative_to(self.source_path).as_posix()
+
+        return file_path.name
+    
     def _collect_files(self) -> Iterator[Path]:
         """Collect supported files from the configured source."""
 

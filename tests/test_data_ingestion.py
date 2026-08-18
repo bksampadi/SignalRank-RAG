@@ -2,7 +2,6 @@ import pytest
 
 from signalrank.components.data_ingestion.data_ingestion import DataIngestion
 from signalrank.config.settings import DataIngestionConfig
-from signalrank.exception.exception import SignalRankException
 
 
 def test_ingests_single_text_file(tmp_path):
@@ -209,20 +208,23 @@ def test_normalises_configured_extensions(tmp_path):
     assert documents[0].file_type == ".txt"
 
 
-def test_missing_source_raises_signalrank_exception(tmp_path):
+def test_missing_source_raises_file_not_found_error(tmp_path):
     missing_source = tmp_path / "missing"
 
     config = DataIngestionConfig(
         source_path=missing_source,
     )
 
-    with pytest.raises(SignalRankException):
+    with pytest.raises(
+        FileNotFoundError, 
+        match="Source path does not exist",
+    ):                 
         DataIngestion(
             config
         ).initiate_data_ingestion()
 
 
-def test_all_empty_documents_raise_signalrank_exception(tmp_path):
+def test_all_empty_documents_raise_value_error(tmp_path):
     corpus = tmp_path / "corpus"
     corpus.mkdir()
 
@@ -240,7 +242,29 @@ def test_all_empty_documents_raise_signalrank_exception(tmp_path):
         source_path=corpus,
     )
 
-    with pytest.raises(SignalRankException):
+    with pytest.raises(
+        ValueError,
+        match="Data ingestion produced no documents",
+    ):
+        DataIngestion(
+            config
+        ).initiate_data_ingestion()
+
+def test_unsupported_single_file_raises_value_error(tmp_path):
+    source_file = tmp_path / "document.xyz"
+    source_file.write_text(
+        "Unsupported content",
+        encoding="utf-8",
+    )
+
+    config = DataIngestionConfig(
+        source_path=source_file,
+    )
+
+    with pytest.raises(
+        ValueError,
+        match="Unsupported file type",
+    ):
         DataIngestion(
             config
         ).initiate_data_ingestion()

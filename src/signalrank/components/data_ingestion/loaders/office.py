@@ -15,6 +15,22 @@ _PARTITIONERS: dict[str, Callable[..., list[Element]]] = {
     ".xlsx": partition_xlsx,
 }
 
+_ELEMENT_TYPE_MAP = {
+    "Title": "heading",
+    "NarrativeText": "paragraph",
+    "UncategorizedText": "paragraph",
+    "ListItem": "list_item",
+    "Table": "table",
+    "Header": "header",
+    "Footer": "footer",
+    "FigureCaption": "figure_caption",
+    "PageNumber": "page_number",
+    "Formula": "formula",
+    "CodeSnippet": "code",
+    "Image": "image",
+    "Address": "address",
+    "EmailAddress": "email_address",
+}
 
 def load_office(file_path: Path) -> list[DocumentElement]:
     """
@@ -23,49 +39,76 @@ def load_office(file_path: Path) -> list[DocumentElement]:
 
     extension = file_path.suffix.lower()
 
-    try:
-        partitioner = _PARTITIONERS[extension]
-    except KeyError as exc:
-        raise ValueError(
-        f"Unsupported Office file type: {extension}"
-        ) from exc
-
     with logfire.span(
         "Load Office document",
         file_path=str(file_path),
         file_type=extension,
     ) as span:
-
-        raw_elements = partitioner(
-            filename=str(file_path),
-        )
-
-        elements: list[DocumentElement] = []
-
-        for raw_element in raw_elements:
-            text = str(raw_element).strip()
-
-            if not text:
-                continue
-
-            metadata = (
-                raw_element.metadata.to_dict()
-                if raw_element.metadata is not None
-                else {}
+        try:
+            partitioner = _PARTITIONERS[extension]
+            
+        except KeyError as exc:
+            logfire.error(
+                "Unsupported Office file type",
+                file_path=str(file_path),
+                file_type=extension,
             )
 
-            elements.append(
-                DocumentElement(
-                    text=text,
-                    element_type=raw_element.category.lower(),
-                    element_index=len(elements),
-                    metadata=metadata,
+            raise ValueError(
+                f"Unsupported Office file type: {extension}"
+            ) from exc
+         
+        try:
+            raw_elements = partitioner(
+                filename=str(file_path),
+            )
+
+            elements: list[DocumentElement] = []
+
+            for raw_element in raw_elements:
+                text = str(raw_element).strip()
+
+                if not text:
+                    continue
+
+                metadata = (
+                    raw_element.metadata.to_dict()
+                    if raw_element.metadata is not None
+                    else {}
                 )
+
+                elements.append(
+                    DocumentElement(
+                        text=text,
+                        element_type=_element_type(
+                            raw_element.category
+                        ),
+                        element_index=len(elements),
+                        metadata=metadata,
+                    )
+                )
+
+            span.set_attribute(
+                "elements_extracted",
+                len(elements),
             )
 
-        span.set_attribute(
-            "elements_extracted",
-            len(elements),
-        )
+            return elements
 
-        return elements
+        except Exception:
+            logfire.exception(
+                "Office document loading failed",
+                file_path=str(file_path),
+                file_type=extension,
+            )
+            raise
+
+def _element_type(category: str) -> str:
+    """
+    Map an Unstructured categroy to a SignalRank element type.
+    """
+
+    return _ELEMENT_TYPE_MAP.get(
+        category,
+        "paragraph",
+    )

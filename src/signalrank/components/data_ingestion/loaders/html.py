@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from pathlib import Path
 
 import logfire
@@ -37,84 +35,101 @@ def load_html(
         file_path=str(file_path),
         encoding=encoding,
     ) as span:
-
-        html = file_path.read_text(
-            encoding=encoding,
-            errors="replace",
-        )
-
-        soup = BeautifulSoup(
-            html,
-            "html.parser",
-        )
-
-        for tag in soup(
-            [
-                "script",
-                "style",
-                "noscript",
-                "template",
-                "svg",
-            ]
-        ):
-            tag.decompose()
-
-        elements: list[DocumentElement] = []
-
-        for block in soup.find_all(_BLOCK_TAGS):
-            if not isinstance(block, Tag):
-                continue
-
-            # Avoid duplicating table contents:
-            # <table> is serialized as one element below.
-
-            if block.name != "table" and block.find_parent("table"):
-                continue
-
-            if block.name == "table":
-                text = _extract_table_text(block)
-
-            else:
-                text = block.get_text(
-                    " ",
-                    strip=True,
-                )
-
-            if not text:
-                continue
-
-            elements.append(
-                DocumentElement(
-                    text=text,
-                    element_type=_element_type(block),
-                    element_index=len(elements),
-                    metadata={
-                        "html_tag": block.name,
-                    },
-                )
+        try:
+            html = file_path.read_text(
+                encoding=encoding,
+                errors="replace",
             )
 
-        span.set_attribute(
-            "elements_extracted",
-            len(elements),
-        )
+            soup = BeautifulSoup(
+                html,
+                "html.parser",
+            )
 
-        return elements
+            for tag in soup(
+                [
+                    "script",
+                    "style",
+                    "noscript",
+                    "template",
+                    "svg",
+                ]
+            ):
+                tag.decompose()
+
+            elements: list[DocumentElement] = []
+
+            for block in soup.find_all(_BLOCK_TAGS):
+                if not isinstance(block, Tag):
+                    continue
+
+                # Avoid duplicating table contents:
+                # <table> is serialized as one element below.
+
+                if block.find_parent("table"):
+                    continue
+
+                if block.name == "table":
+                    text = _extract_table_text(block)
+
+                else:
+                    text = block.get_text(
+                        " ",
+                        strip=True,
+                    )
+
+                if not text:
+                    continue
+
+                elements.append(
+                    DocumentElement(
+                        text=text,
+                        element_type=_element_type(block),
+                        element_index=len(elements),
+                        metadata={
+                            "html_tag": block.name,
+                        },
+                    )
+                )
+
+            # Fallback for poorly structured HTML.
+            if not elements:
+                root = soup.body or soup
+                text = " ".join(root.stripped_strings)
+
+                if text:
+                    elements.append(
+                        DocumentElement(
+                            text=text,
+                            element_type="paragraph",
+                            element_index=0,
+                            metadata={
+                                "html_tag": "fallback",
+                            },
+                        )
+                    )
+
+            span.set_attribute(
+                "elements_extracted",
+                len(elements),
+            )
+
+            return elements
+
+        except Exception:
+            logfire.exception(
+                "HTML loading failed!",
+                file_path=str(file_path),
+            )
+            raise
 
 
-def _element_type(tag:Tag) -> str:
+def _element_type(tag: Tag) -> str:
     """
     Map an HTML tag to a normalized element type.
     """
 
-    if tag.name in {
-        "h1",
-        "h2",
-        "h3",
-        "h4",
-        "h5",
-        "h6",
-    }:
+    if tag.name and tag.name.startswith("h"):
         return "heading"
 
     if tag.name == "table":
@@ -134,12 +149,15 @@ def _element_type(tag:Tag) -> str:
 
 def _extract_table_text(table: Tag) -> str:
     """
-    Serialize an HTML table into deterministic tab-seperated text.
+    Serialize an HTML table into deterministic tab-separated text.
     """
 
     rows: list[str] = []
 
-    for row in table.find_all["tr"]:
+    for row in table.find_all("tr"):
+        if row.find_parent("table") is not table:
+            continue
+        
         cells = [
             cell.get_text(" ", strip=True)
             for cell in row.find_all(
@@ -155,6 +173,6 @@ def _extract_table_text(table: Tag) -> str:
         ]
 
         if cells:
-            row.append("\t".join(cells))
+            rows.append("\t".join(cells))
 
     return "\n".join(rows)
