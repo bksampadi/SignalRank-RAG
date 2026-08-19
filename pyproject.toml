@@ -33,6 +33,8 @@ dependencies = [
     "streamlit>=1.61.1",
     "requests>=2.34.2",
     "datasets>=5.0.1",
+    "langchain-google-genai>=4.3.4",
+    "google-generativeai>=0.8.6",
 ]
 
 [project.optional-dependencies]

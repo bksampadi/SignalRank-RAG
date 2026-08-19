@@ -8,7 +8,7 @@ class EmbeddingProvider(Protocol):
 
     def embed_documents(
             self,
-            text: list[str],
+            texts: list[str],
     ) -> list[list[float]]:
         ...
 

@@ -3,7 +3,7 @@ from signalrank.components.embeddings.sentence_transformer import SentenceTransf
 def test_embedding_dimension():
     provider = SentenceTransformerEmbedding()
 
-    assert provider.dimension == 384
+    assert provider.dimension == 768
 
 
 def test_embed_query_returns_expected_dimension():
@@ -22,3 +22,7 @@ def test_embed_documents_preserves_counts():
     )
 
     assert len(embeddings) == 2
+    assert all(
+        len(embedding) == provider.dimension
+        for embedding in embeddings
+    )

@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from pathlib import Path
 
+from typing import Literal
+
 from signalrank.config.settings_utils import normalise_supported_extensions
 
 
@@ -53,18 +55,37 @@ class ChunkingConfig:
                 "chunk_overlap must be smaller than chunk_size"
             )
 
+EmbeddingProviderType = Literal[
+    "sentence_transformer",
+    "gemini",
+]
+
 @dataclass(frozen=True)
 class EmbeddingConfig:
     """Configuration for the embedding provider."""
 
+    provider: str = "sentence_transformer"
+
     model_name: str = (
-        "sentence-transformers/all-MiniLM-L6-v2"
+        "sentence-transformers/all-mpnet-base-v2"
     )
+
+    dimension: int | None = None
 
     def __post_init__(self) -> None:
         if not self.model_name.strip():
             raise ValueError(
                 "model_name cannot be empty"
+            )
+
+        if not self.model_name.strip():
+            raise ValueError(
+                "model_name cannot be empty"
+            )
+
+        if self.dimension is not None and self.dimension <= 0:
+            raise ValueError(
+                "dimension must be greater than zero"
             )
 
 

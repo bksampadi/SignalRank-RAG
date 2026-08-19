@@ -10,9 +10,10 @@ def test_default_configuration_loading():
     assert config.data_ingestion.source_path.name == "data"
     assert config.chunking.chunk_size == 1000
     assert config.chunking.chunk_overlap == 200
+    assert config.embedding.provider == "sentence_transformer"
     assert (
         config.embedding.model_name
-        == "sentence-transformers/all-MiniLM-L6-v2"
+        == "sentence-transformers/all-mpnet-base-v2"
     )
     assert config.retrieval.top_k == 5
     assert config.qdrant.collection_name == "signalrank_finewiki"

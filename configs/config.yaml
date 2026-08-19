@@ -14,7 +14,8 @@ data_ingestion:
     - .xlsx
 
 embedding:
-  model_name: sentence-transformers/all-MiniLM-L6-v2
+  provider: sentence_transformer
+  model_name: sentence-transformers/all-mpnet-base-v2
 
 chunking:
   chunk_size: 1000

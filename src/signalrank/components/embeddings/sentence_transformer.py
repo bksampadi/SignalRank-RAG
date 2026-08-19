@@ -4,7 +4,9 @@ from sentence_transformers import SentenceTransformer
 class SentenceTransformerEmbedding:
     def __init__(
             self,
-            model_name: str = "sentence-transformers/all-MiniLM-L6-v2",
+            model_name: str = (
+            "sentence-transformers/all-mpnet-base-v2"
+        ),
     ):
         self.model = SentenceTransformer(model_name)
 
@@ -37,6 +39,7 @@ class SentenceTransformerEmbedding:
             self,
             text: str,
     ) -> list[float]:
+        
         embedding = self.model.encode(
             text,
             normalize_embeddings=True
