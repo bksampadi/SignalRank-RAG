@@ -27,13 +27,19 @@ def load_text(
 
             if not text:
                 span.set_attribute(
-                    "text_extacted", 
+                    "text_extracted", 
                     False,
                 )
                 return []
 
-            span.set_attribute("text_extracted", True)
-            span.set_attribute("character_count", len(text))
+            span.set_attribute(
+                "text_extracted", 
+                True,
+            )
+            span.set_attribute(
+                "character_count", 
+                len(text),
+            )
 
             return [
                 DocumentElement(
