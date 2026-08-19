@@ -1,9 +1,8 @@
+import logfire
 from qdrant_client import QdrantClient
 
 from signalrank.components.chunking.chunking import DocumentChunker
-from signalrank.components.embeddings.sentence_transformer import (
-    SentenceTransformerEmbedding,
-)
+from signalrank.components.embeddings.factory import create_embedding_provider
 from signalrank.components.retrieval.base import Retriever
 from signalrank.components.retrieval.bm25 import BM25Retriever
 from signalrank.components.retrieval.dense import DenseRetriever
@@ -17,70 +16,85 @@ from signalrank.pipelines.data_ingestion_pipeline import (
 class RetrievalPipeline:
     """
     Build the configured retrieval stack.
+
+    The dense vector index must already exist.
     """
 
     def build(self) -> tuple[Retriever, Retriever]:
         config = ConfigurationManager().load()
 
-        # 1. Ingest
-        documents = DataIngestionPipeline().run()
-
-        # 2. Chunk
-        
-        chunker = DocumentChunker(
-            config=config.chunking,
-        )
-
-        chunks = chunker.chunk_documents(documents)
-
-        # 3. BM25
-
-        bm25 = BM25Retriever(chunks)
-
-        # 4. Embeddings
-
-        embedding_provider = SentenceTransformerEmbedding(
-            model_name=config.embedding.model_name,
-        )
-
-        vectors = embedding_provider.embed_documents(
-            [chunk.text for chunk in chunks]
-        )
-
-        # 5. Vector store
-        qdrant_client = QdrantClient(
-            path=str(config.qdrant.path),
-        )
-        
-        vector_store = QdrantVectorStore(
-            dimension=embedding_provider.dimension,
+        with logfire.span(
+            "Build retrieval pipeline",
+            embedding_provider=config.embedding.provider,
+            embedding_model=config.embedding.model_name,
             collection_name=config.qdrant.collection_name,
-            client=qdrant_client,
-        )
+        ):
 
-        vector_store.upsert(
-            ids=[chunk.chunk_id for chunk in chunks],
-            vectors=vectors,
-            payloads=[
-                {
-                    "doc_id": chunk.doc_id,
-                    "source_path": chunk.source_path,
-                }
+            # 1. Load documents
+
+            documents = DataIngestionPipeline().run()
+
+            # 2. Reconstruct deterministic chunks
+
+            chunker = DocumentChunker(
+                config=config.chunking,
+            )
+
+            chunks = chunker.chunk_documents(
+                documents
+            )
+
+            # 3. Build lexical retriever
+
+            bm25 = BM25Retriever(
+                chunks
+            )
+
+            # 4. Create configured embedding provider
+
+            embedding_provider = create_embedding_provider(
+                provider=config.embedding.provider,
+                model_name=config.embedding.model_name,
+                dimension=config.embedding.dimension,
+            )
+
+            # 5. Connect to existing Qdrant index
+
+            qdrant_client = QdrantClient(
+                path=str(config.qdrant.path),
+            )
+
+            if not qdrant_client.collection_exists(
+                config.qdrant.collection_name
+            ):
+                qdrant_client.close()
+
+                raise RuntimeError(
+                    "Qdrant collection "
+                    f"'{config.qdrant.collection_name}' "
+                    "does not exist. Run the indexing pipeline "
+                    "before starting retrieval."
+                )
+
+            vector_store = QdrantVectorStore(
+                dimension=embedding_provider.dimension,
+                collection_name=config.qdrant.collection_name,
+                client=qdrant_client,
+            )
+
+            # 6. Build deterministic chunk lookup
+
+            chunk_map = {
+                chunk.chunk_id: chunk
                 for chunk in chunks
-            ],
-        )
+            }
 
-        # 6. Dense retriever
+            # 7. Build dense retriever
 
-        chunk_map = {
-            chunk.chunk_id: chunk
-            for chunk in chunks
-        }
+            dense = DenseRetriever(
+                embedding_provider=embedding_provider,
+                vector_store=vector_store,
+                chunks=chunk_map,
+            )
 
-        dense = DenseRetriever(
-            embedding_provider=embedding_provider,
-            vector_store=vector_store,
-            chunks=chunk_map,
-        )
-
-        return bm25, dense
+            return bm25, dense
