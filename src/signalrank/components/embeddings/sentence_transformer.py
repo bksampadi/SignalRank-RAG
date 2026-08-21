@@ -1,3 +1,5 @@
+import logfire
+
 from sentence_transformers import SentenceTransformer
 
 
@@ -9,6 +11,12 @@ class SentenceTransformerEmbedding:
         ),
     ):
         self.model = SentenceTransformer(model_name)
+
+        logfire.info(
+            "SentenceTransformer embeddings initialized",
+            model=model_name,
+            dimension=self.dimension,
+        )
 
     @property
     def dimension(self) -> int:
@@ -27,10 +35,17 @@ class SentenceTransformerEmbedding:
             texts: list[str],
     ) -> list[list[float]]:
 
-        embeddings = self.model.encode(
-            texts,
-            normalize_embeddings=True,
-        )
+        with logfire.span(
+            "Embed documents",
+            provider="sentence_transformer",
+            document_count=len(texts),
+            dimension=self.dimension,
+        ):
+
+            embeddings = self.model.encode(
+                texts,
+                normalize_embeddings=True,
+            )
 
         return embeddings.tolist()
 
@@ -39,11 +54,16 @@ class SentenceTransformerEmbedding:
             self,
             text: str,
     ) -> list[float]:
-        
-        embedding = self.model.encode(
-            text,
-            normalize_embeddings=True
-        )
+
+        with logfire.span(
+            "Embed query",
+            provider="sentence_transformer",
+            dimension=self.dimension,
+        ):
+            embedding = self.model.encode(
+                text,
+                normalize_embeddings=True
+            )
 
         return embedding.tolist()
 

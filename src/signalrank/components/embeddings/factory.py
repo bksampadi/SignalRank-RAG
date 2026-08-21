@@ -1,15 +1,11 @@
-from typing import Literal
-
-from signalrank.components.embeddings.base import EmbeddingProvider
+from signalrank.components.embeddings.base import (
+    EmbeddingProvider,
+    EmbeddingProviderType,
+)
 from signalrank.components.embeddings.gemini import GeminiEmbedding
 from signalrank.components.embeddings.sentence_transformer import (
     SentenceTransformerEmbedding,
 )
-
-EmbeddingProviderType = Literal[
-    "sentence_transformer",
-    "gemini",
-]
 
 def create_embedding_provider(
         provider: EmbeddingProviderType,

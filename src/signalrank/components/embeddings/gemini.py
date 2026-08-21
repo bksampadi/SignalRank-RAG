@@ -19,7 +19,7 @@ class GeminiEmbedding:
         )
 
         logfire.info(
-            "Geminin embeddings initialized",
+            "Gemini embeddings initialized",
             model=model_name,
             dimension=dimension,
         )
@@ -33,10 +33,23 @@ class GeminiEmbedding:
             self,
             texts: list[str],
     ) -> list[list[float]]:
-        return self.model.embed_documents(texts)
+
+        with logfire.span(
+            "Embed documents",
+            provider="gemini",
+            document_count=len(texts),
+            dimension=self.dimension,
+        ):
+            return self.model.embed_documents(texts)
 
     def embed_query(
             self,
             text: str,
     ) -> list[float]:
-        return self.model.embed_query(text)
+
+        with logfire.span(
+            "Embed query",
+            provider="gemini",
+            dimension=self.dimension,
+        ):
+            return self.model.embed_query(text)

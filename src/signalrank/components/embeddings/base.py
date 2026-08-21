@@ -1,5 +1,10 @@
-from typing import Protocol
+from typing import Literal, Protocol
 
+
+EmbeddingProviderType = Literal[
+    "sentence_transformer",
+    "gemini",
+]
 
 class EmbeddingProvider(Protocol):
     @property

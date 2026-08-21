@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Literal
 
 from signalrank.config.settings_utils import normalise_supported_extensions
-
+from signalrank.components.embeddings.base import EmbeddingProviderType
 
 @dataclass(frozen=True)
 class DataIngestionConfig:
@@ -55,30 +55,16 @@ class ChunkingConfig:
                 "chunk_overlap must be smaller than chunk_size"
             )
 
-EmbeddingProviderType = Literal[
-    "sentence_transformer",
-    "gemini",
-]
-
 @dataclass(frozen=True)
 class EmbeddingConfig:
     """Configuration for the embedding provider."""
 
-    provider: str = "sentence_transformer"
-
-    model_name: str = (
-        "sentence-transformers/all-mpnet-base-v2"
-    )
-
+    provider: EmbeddingProviderType = "sentence_transformer"
+    model_name: str | None = None
     dimension: int | None = None
 
     def __post_init__(self) -> None:
-        if not self.model_name.strip():
-            raise ValueError(
-                "model_name cannot be empty"
-            )
-
-        if not self.model_name.strip():
+        if self.model_name is not None and not self.model_name.strip():
             raise ValueError(
                 "model_name cannot be empty"
             )
