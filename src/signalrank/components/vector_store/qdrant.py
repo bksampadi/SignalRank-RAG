@@ -1,6 +1,28 @@
+from pathlib import Path
 from uuid import NAMESPACE_URL, uuid5
 
+import logfire
 from qdrant_client import QdrantClient, models
+
+
+def create_qdrant_client(
+        *,
+        url: str | None = None,
+        api_key: str | None = None,
+        path: Path | None = None,
+) -> QdrantClient:
+    if url is not None:
+        return QdrantClient(
+            url=url,
+            api_key=api_key,
+        )
+
+    if path is not None:
+        return QdrantClient(
+            path=str(path),
+        )
+
+    return QdrantClient(":memory:")
 
 
 class QdrantVectorStore:
@@ -11,17 +33,30 @@ class QdrantVectorStore:
             client: QdrantClient | None = None
     ):
         self._collection_name = collection_name
+        self._dimension = dimension
 
         self._client = client or QdrantClient(":memory:")
 
-        if not self._client.collection_exists(collection_name):
-            self._client.create_collection(
-                collection_name=collection_name,
-                vectors_config=models.VectorParams(
-                    size=dimension,
-                    distance=models.Distance.COSINE,
-                ),
-            )
+        with logfire.span(
+            "Initialize Qdrant vector store",
+            collection=collection_name,
+            dimension=dimension,
+        ):
+
+            if not self._client.collection_exists(collection_name):
+                self._client.create_collection(
+                    collection_name=collection_name,
+                    vectors_config=models.VectorParams(
+                        size=dimension,
+                        distance=models.Distance.COSINE,
+                    ),
+                )
+
+                logfire.info(
+                    "Qdrant collection created",
+                    collection=collection_name,
+                    dimension=dimension,
+                )
 
     @staticmethod
     def _point_id(chunk_id: str) -> str:
@@ -39,6 +74,17 @@ class QdrantVectorStore:
             vectors: list[list[float]],
             payloads: list[dict[str, object]],
     ) -> None:
+
+        if not (
+            len(ids)
+            == len(vectors)
+            == len(payloads)
+        ):
+            raise ValueError(
+                "ids, vectors, and payloads must have "
+                "the same length"
+            )
+        
         points = []
 
         for chunk_id, vector, payload in zip(
@@ -46,6 +92,14 @@ class QdrantVectorStore:
             vectors,
             payloads,
         ):
+            if len(vector) != self._dimension:
+                raise ValueError(
+                    f"Vector dimension mismatch for "
+                    f"{chunk_id}: expected "
+                    f"{self._dimension}, got "
+                    f"{len(vector)}"
+                )
+            
             point_payload = dict(payload)
             point_payload["chunk_id"] = chunk_id
 
@@ -57,24 +111,43 @@ class QdrantVectorStore:
                 )
             )
 
-
-        self._client.upsert(
-            collection_name=self._collection_name,
-            points=points,
-            wait=True,
-        )
+        with logfire.span(
+            "Qdrant upsert",
+            collection=self._collection_name,
+            point_count=len(points),
+            dimension=self._dimension,
+        ):
+            self._client.upsert(
+                collection_name=self._collection_name,
+                points=points,
+                wait=True,
+            )
 
     def search(
             self,
             query_vector: list[float],
             top_k: int = 10,
     ) -> list[tuple[str, float]]:
-        result = self._client.query_points(
-            collection_name=self._collection_name,
-            query=query_vector,
-            limit=top_k,
-            with_payload=True,
-        )
+
+        if len(query_vector) != self._dimension:
+            raise ValueError(
+                "Query vector dimension mismatch: "
+                f"expected {self._dimension}, "
+                f"got {len(query_vector)}"
+            )
+
+        with logfire.span(
+            "Qdrant search",
+            collection=self._collection_name,
+            top_k=top_k,
+            dimension=self._dimension,
+        ):
+            result = self._client.query_points(
+                collection_name=self._collection_name,
+                query=query_vector,
+                limit=top_k,
+                with_payload=True,
+            )
 
         return [
             (

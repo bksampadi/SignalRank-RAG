@@ -88,23 +88,37 @@ class RetrievalConfig:
             )
 
 
+QdrantMode = Literal[
+    "memory",
+    "local",
+    "remote",
+]
+
+
 @dataclass(frozen=True)
 class QdrantConfig:
     """Configuration for the Qdrant vector store."""
 
+    mode: QdrantMode = "memory"
     collection_name: str = "signalrank_finewiki"
-    path: Path = Path("data/qdrant")
+    path: Path | None = Path("data/qdrant")
 
     def __post_init__(self) -> None:
-        object.__setattr__(
-            self,
-            "path",
-            Path(self.path),
-        )
+        if self.path is not None:
+            object.__setattr__(
+                self,
+                "path",
+                Path(self.path),
+            )
 
         if not self.collection_name.strip():
             raise ValueError(
                 "collection_name cannot be empty"
+            )
+
+        if self.mode == "local" and self.path is None:
+            raise ValueError(
+                "path is required when Qdrant mode is 'local'"
             )
 
 

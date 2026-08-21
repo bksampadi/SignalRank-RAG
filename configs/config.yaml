@@ -25,6 +25,7 @@ retrieval:
   top_k: 5
 
 qdrant:
+  mode: local
   collection_name: signalrank_finewiki
   path: data/qdrant
 

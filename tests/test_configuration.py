@@ -16,7 +16,9 @@ def test_default_configuration_loading():
         == "sentence-transformers/all-mpnet-base-v2"
     )
     assert config.retrieval.top_k == 5
+    assert config.qdrant.mode == "local"
     assert config.qdrant.collection_name == "signalrank_finewiki"
+    assert config.qdrant.path is not None
     assert config.qdrant.path.as_posix() == "data/qdrant"
     assert config.logfire.service_name == "signalrank-rag"
     assert config.logfire.environment == "local"
