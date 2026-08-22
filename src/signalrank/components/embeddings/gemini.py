@@ -8,9 +8,16 @@ class GeminiEmbedding:
             self,
             model_name: str,
             dimension: int,
+            batch_size: int = 50,
             api_key: str | None = None,
     ):
+        if batch_size <=0:
+            raise ValueError(
+                "batch_size must be greater than zero"
+            )
+
         self._dimension = dimension
+        self._batch_size = batch_size
 
         self.model = GoogleGenerativeAIEmbeddings(
             model=model_name,
@@ -22,6 +29,7 @@ class GeminiEmbedding:
             "Gemini embeddings initialized",
             model=model_name,
             dimension=dimension,
+            batch_size=batch_size,
         )
 
 
@@ -39,8 +47,12 @@ class GeminiEmbedding:
             provider="gemini",
             document_count=len(texts),
             dimension=self.dimension,
+            batch_size=self._batch_size,
         ):
-            return self.model.embed_documents(texts)
+            return self.model.embed_documents(
+                texts,
+                batch_size=self._batch_size,
+            )
 
     def embed_query(
             self,

@@ -25,7 +25,7 @@ def create_embedding_provider(
 
     if provider == "gemini":
         return GeminiEmbedding(
-            model_name=model_name or "gemini-embedding-2-preview",
+            model_name=model_name or "gemini-embedding-2",
             dimension=dimension if dimension is not None else 768,
             api_key=api_key,
         )
