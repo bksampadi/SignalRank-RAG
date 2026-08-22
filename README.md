@@ -102,7 +102,7 @@ The same deterministic chunks feed both lexical and semantic retrieval. Dense re
 | **UI** | Streamlit |
 | **Observability** | Logfire distributed tracing |
 | **Testing** | 35 automated tests |
-| **CI** | Python 3.11–3-13 on Ubuntu and Windows |
+| **CI** | Python 3.11–3.13 on Ubuntu and Windows |
 | **Packaging** | `uv` with locked dependencies |
 | **Runtime** | Docker and Docker Compose |
 
