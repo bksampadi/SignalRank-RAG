@@ -140,10 +140,24 @@ class QdrantVectorStore:
                 with_payload=True,
             )
 
-        return [
-            (
-                str(point.payload["chunk_id"]),
-                float(point.score),
+        results: list[tuple[str, float]] = []
+
+        for point in result.points:
+            payload = point.payload
+
+            if payload is None:
+                raise RuntimeError("Qdrant search result is missing its payload.")
+
+            chunk_id = payload.get("chunk_id")
+
+            if chunk_id is None:
+                raise RuntimeError("Qdrant search result is missing chunk_id.")
+
+            results.append(
+                (
+                    str(chunk_id),
+                    float(point.score),
+                )
             )
-            for point in result.points
-        ]
+
+        return results

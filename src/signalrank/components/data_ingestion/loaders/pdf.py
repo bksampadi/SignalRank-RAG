@@ -23,7 +23,7 @@ def load_pdf(file_path: Path) -> list[DocumentElement]:
                     len(document),
                 )
 
-                for page_index, page in enumerate(document):
+                for page_index, page in enumerate(document.pages()):
                     text = page.get_text(
                         "text",
                         sort=True,

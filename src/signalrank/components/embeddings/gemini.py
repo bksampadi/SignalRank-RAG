@@ -1,5 +1,6 @@
 import logfire
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from pydantic import SecretStr
 
 
 class GeminiEmbedding:
@@ -18,7 +19,7 @@ class GeminiEmbedding:
 
         self.model = GoogleGenerativeAIEmbeddings(
             model=model_name,
-            google_api_key=api_key,
+            api_key=(SecretStr(api_key) if api_key is not None else None),
             output_dimensionality=dimension,
         )
 

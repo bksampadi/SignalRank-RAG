@@ -1,7 +1,8 @@
 from contextlib import asynccontextmanager
+from typing import Any
 
 import logfire
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, WebSocket
 
 from signalrank.api.schemas import (
     RetrieveRequest,
@@ -13,9 +14,9 @@ from signalrank.services.retrieval_service import RetrievalService
 
 
 def logfire_request_attributes(
-    request: Request,
-    attributes: dict,
-) -> dict:
+    request: Request | WebSocket,
+    attributes: dict[str, Any],
+) -> dict[str, Any] | None:
     if attributes["errors"]:
         return {
             "errors": attributes["errors"],
