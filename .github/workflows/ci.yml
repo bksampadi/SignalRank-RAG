@@ -17,6 +17,30 @@ concurrency:
     cancel-in-progress: true
 
 jobs:
+    quality:
+      name: Code quality
+      runs-on: ubuntu-latest
+      timeout-minutes: 10
+
+      steps:
+        - name: Check out repository
+          uses: actions/checkout@v6
+
+        - name: Install uv and Python
+          uses: astral-sh/setup-uv@9.0.0
+          with:
+            python-version: "3.13"
+            enable-cache: true
+
+        - name: Install project
+          run: uv sync --locked --dev
+
+        - name: Lint
+          run: uv run ruff check .
+
+        - name: Check formatting
+          run: uv run ruff format --check .
+
     test:
         name: ${{ matrix.os }} / Python ${{ matrix.python-version }}
         runs-on: ${{ matrix.os }}
