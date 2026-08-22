@@ -6,20 +6,19 @@ from signalrank.components.vector_store.base import VectorStore
 
 class DenseRetriever:
     def __init__(
-            self,
-            embedding_provider: EmbeddingProvider,
-            vector_store: VectorStore,
-            chunks: dict[str, DocumentChunk],
+        self,
+        embedding_provider: EmbeddingProvider,
+        vector_store: VectorStore,
+        chunks: dict[str, DocumentChunk],
     ):
         self._embedding_provider = embedding_provider
         self._vector_store = vector_store
         self._chunks = chunks
 
-
     def retrieve(
-            self,
-            query: str,
-            top_k: int = 10,
+        self,
+        query: str,
+        top_k: int = 10,
     ) -> list[SearchResult]:
 
         if not query.strip():
@@ -53,5 +52,3 @@ class DenseRetriever:
             )
 
         return search_results
-
-        

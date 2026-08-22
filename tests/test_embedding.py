@@ -1,4 +1,7 @@
-from signalrank.components.embeddings.sentence_transformer import SentenceTransformer, SentenceTransformerEmbedding
+from signalrank.components.embeddings.sentence_transformer import (
+    SentenceTransformerEmbedding,
+)
+
 
 def test_embedding_dimension():
     provider = SentenceTransformerEmbedding()
@@ -17,12 +20,7 @@ def test_embed_query_returns_expected_dimension():
 def test_embed_documents_preserves_counts():
     provider = SentenceTransformerEmbedding()
 
-    embeddings = provider.embed_documents(
-        ["first chunk", "second chunk"]
-    )
+    embeddings = provider.embed_documents(["first chunk", "second chunk"])
 
     assert len(embeddings) == 2
-    assert all(
-        len(embedding) == provider.dimension
-        for embedding in embeddings
-    )
+    assert all(len(embedding) == provider.dimension for embedding in embeddings)

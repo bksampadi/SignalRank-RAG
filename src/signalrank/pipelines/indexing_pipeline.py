@@ -27,7 +27,6 @@ class IndexingPipeline:
             embedding_model=config.embedding.model_name,
             collection_name=config.qdrant.collection_name,
         ) as span:
-
             # 1. Ingest documents
 
             documents = DataIngestionPipeline().run()
@@ -43,9 +42,7 @@ class IndexingPipeline:
                 config=config.chunking,
             )
 
-            chunks = chunker.chunk_documents(
-                documents
-            )
+            chunks = chunker.chunk_documents(documents)
 
             span.set_attribute(
                 "chunk_count",
@@ -66,10 +63,7 @@ class IndexingPipeline:
             # 4. Embed document chunks
 
             vectors = embedding_provider.embed_documents(
-                [
-                    chunk.text
-                    for chunk in chunks
-                ]
+                [chunk.text for chunk in chunks]
             )
 
             # 5. Open vector store
@@ -88,10 +82,7 @@ class IndexingPipeline:
                 # 6. Index vectors
 
                 vector_store.upsert(
-                    ids=[
-                        chunk.chunk_id
-                        for chunk in chunks
-                    ],
+                    ids=[chunk.chunk_id for chunk in chunks],
                     vectors=vectors,
                     payloads=[
                         {

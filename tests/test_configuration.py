@@ -1,7 +1,6 @@
 import pytest
 
-from signalrank.config.configuration import ConfigurationManager
-from signalrank.config.configuration import DataIngestionConfig
+from signalrank.config.configuration import ConfigurationManager, DataIngestionConfig
 
 
 def test_default_configuration_loading():
@@ -11,10 +10,7 @@ def test_default_configuration_loading():
     assert config.chunking.chunk_size == 1000
     assert config.chunking.chunk_overlap == 200
     assert config.embedding.provider == "sentence_transformer"
-    assert (
-        config.embedding.model_name
-        == "sentence-transformers/all-mpnet-base-v2"
-    )
+    assert config.embedding.model_name == "sentence-transformers/all-mpnet-base-v2"
     assert config.retrieval.top_k == 5
     assert config.qdrant.mode == "local"
     assert config.qdrant.collection_name == "signalrank_finewiki"
@@ -43,8 +39,6 @@ def test_data_ingestion_config_normalises_extensions(
         source_path=tmp_path,
         recursive=True,
         encoding="utf-8",
-    
     )
 
     assert config.source_path == tmp_path
-    

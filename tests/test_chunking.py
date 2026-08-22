@@ -3,24 +3,23 @@ from signalrank.components.data_ingestion.document import (
     DocumentElement,
     ParsedDocument,
 )
-from signalrank.config.settings import ChunkingConfig
 from signalrank.config.configuration import ConfigurationManager
+from signalrank.config.settings import ChunkingConfig
 
 
 def make_document(text: str) -> ParsedDocument:
-        return ParsedDocument(
-            doc_id="doc_test",
-            source_path="test.txt",
-            file_type=".txt",
-            elements=(
-                DocumentElement(
-                    text=text,
-                    element_type="text",
-                    element_index= 0,
-                ),
+    return ParsedDocument(
+        doc_id="doc_test",
+        source_path="test.txt",
+        file_type=".txt",
+        elements=(
+            DocumentElement(
+                text=text,
+                element_type="text",
+                element_index=0,
             ),
-        )
-    
+        ),
+    )
 
 
 def test_short_document_produces_single_chunk():
@@ -31,9 +30,7 @@ def test_short_document_produces_single_chunk():
         )
     )
 
-    chunks = chunker.chunk_document(
-        make_document("hello world")
-    )
+    chunks = chunker.chunk_document(make_document("hello world"))
 
     assert len(chunks) == 1
     assert chunks[0].text == "hello world"
@@ -48,9 +45,7 @@ def test_chunk_overlap_is_preserved():
         )
     )
 
-    chunks = chunker.chunk_document(
-        make_document("abcdefghij")
-    )
+    chunks = chunker.chunk_document(make_document("abcdefghij"))
 
     assert len(chunks) == 2
     assert chunks[0].text == "abcdef"
@@ -70,9 +65,7 @@ def test_chunk_ids_are_deterministic():
     first = chunker.chunk_document(document)
     second = chunker.chunk_document(document)
 
-    assert [chunk.chunk_id for chunk in first] == [
-        chunk.chunk_id for chunk in second
-    ]
+    assert [chunk.chunk_id for chunk in first] == [chunk.chunk_id for chunk in second]
 
 
 def test_chunk_preserves_document_provenance():
@@ -134,7 +127,6 @@ def test_empty_elements_produce_no_chunks():
     )
 
     assert chunker.chunk_document(document) == []
-
 
 
 def test_chunking_configuration_loading():

@@ -5,23 +5,23 @@ import pymupdf
 
 from signalrank.components.data_ingestion.document import DocumentElement
 
+
 def load_pdf(file_path: Path) -> list[DocumentElement]:
     """Extract page-aware text from a PDF."""
 
     with logfire.span(
-        "Load PDF", 
+        "Load PDF",
         file_path=str(file_path),
     ) as span:
         try:
-        
             pages: list[DocumentElement] = []
             pages_without_text = 0
 
             with pymupdf.open(file_path) as document:
                 span.set_attribute(
-                    "page_count", 
+                    "page_count",
                     len(document),
-                    )
+                )
 
                 for page_index, page in enumerate(document):
                     text = page.get_text(

@@ -29,7 +29,6 @@ class RetrievalPipeline:
             embedding_model=config.embedding.model_name,
             collection_name=config.qdrant.collection_name,
         ):
-
             # 1. Load documents
 
             documents = DataIngestionPipeline().run()
@@ -40,15 +39,11 @@ class RetrievalPipeline:
                 config=config.chunking,
             )
 
-            chunks = chunker.chunk_documents(
-                documents
-            )
+            chunks = chunker.chunk_documents(documents)
 
             # 3. Build lexical retriever
 
-            bm25 = BM25Retriever(
-                chunks
-            )
+            bm25 = BM25Retriever(chunks)
 
             # 4. Create configured embedding provider
 
@@ -64,9 +59,7 @@ class RetrievalPipeline:
                 path=str(config.qdrant.path),
             )
 
-            if not qdrant_client.collection_exists(
-                config.qdrant.collection_name
-            ):
+            if not qdrant_client.collection_exists(config.qdrant.collection_name):
                 qdrant_client.close()
 
                 raise RuntimeError(
@@ -84,10 +77,7 @@ class RetrievalPipeline:
 
             # 6. Build deterministic chunk lookup
 
-            chunk_map = {
-                chunk.chunk_id: chunk
-                for chunk in chunks
-            }
+            chunk_map = {chunk.chunk_id: chunk for chunk in chunks}
 
             # 7. Build dense retriever
 

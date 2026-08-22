@@ -1,5 +1,5 @@
-from pathlib import Path
 from collections.abc import Iterator
+from pathlib import Path
 
 import logfire
 
@@ -17,7 +17,6 @@ class DataIngestion:
         self.source_path = config.source_path
         self.supported_extensions = config.supported_extensions
 
-
     def initiate_data_ingestion(self) -> list[ParsedDocument]:
         """
         Load supported files into normalized parsed documents.
@@ -32,7 +31,7 @@ class DataIngestion:
                 files = list(self._collect_files())
 
                 span.set_attribute(
-                    "files_discovered", 
+                    "files_discovered",
                     len(files),
                 )
 
@@ -44,15 +43,11 @@ class DataIngestion:
 
                 documents: list[ParsedDocument] = []
 
-
                 for file_path in files:
-                    source_reference = self._get_source_reference(
-                        file_path
-                    )
+                    source_reference = self._get_source_reference(file_path)
 
                     loader = get_loader(
-                        file_path.suffix.lower(),
-                        encoding=self.config.encoding
+                        file_path.suffix.lower(), encoding=self.config.encoding
                     )
 
                     elements = loader(file_path)
@@ -64,15 +59,13 @@ class DataIngestion:
                         )
                         continue
 
-                    combined_text = "\n".join(
-                        element.text for element in elements
-                    )
+                    combined_text = "\n".join(element.text for element in elements)
 
                     documents.append(
                         ParsedDocument(
                             doc_id=create_document_id(
                                 source_reference,
-                            combined_text,
+                                combined_text,
                             ),
                             source_path=source_reference,
                             file_type=file_path.suffix.lower(),
@@ -84,9 +77,7 @@ class DataIngestion:
                     )
 
                 if not documents:
-                    raise ValueError(
-                        "Data ingestion produced no documents"
-                    )
+                    raise ValueError("Data ingestion produced no documents")
 
                 span.set_attribute(
                     "documents_loaded",
@@ -98,9 +89,9 @@ class DataIngestion:
             except Exception:
                 logfire.exception(
                     "Data ingestion failed",
-                    source_path = str(self.source_path),
+                    source_path=str(self.source_path),
                 )
-                raise 
+                raise
 
     def _get_source_reference(self, file_path: Path) -> str:
         """
@@ -111,14 +102,12 @@ class DataIngestion:
             return file_path.relative_to(self.source_path).as_posix()
 
         return file_path.name
-    
+
     def _collect_files(self) -> Iterator[Path]:
         """Collect supported files from the configured source."""
 
         if not self.source_path.exists():
-            raise FileNotFoundError(
-                f"Source path does not exist: {self.source_path}"
-            )
+            raise FileNotFoundError(f"Source path does not exist: {self.source_path}")
 
         if self.source_path.is_file():
             if self._is_supported_file(self.source_path):
@@ -133,24 +122,15 @@ class DataIngestion:
         if self.source_path.is_dir():
             pattern = "**/*" if self.config.recursive else "*"
 
-            for file_path in sorted(
-                self.source_path.glob(pattern)
-            ):
-                if (
-                    file_path.is_file() 
-                    and self._is_supported_file(file_path)
-                ):
+            for file_path in sorted(self.source_path.glob(pattern)):
+                if file_path.is_file() and self._is_supported_file(file_path):
                     yield file_path
 
             return
 
         raise ValueError(
-            f"Source path is neither a file nor a directory: "
-            f"{self.source_path}"
+            f"Source path is neither a file nor a directory: {self.source_path}"
         )
 
     def _is_supported_file(self, file_path: Path) -> bool:
-        return (
-            file_path.suffix.lower() 
-            in self.supported_extensions
-        )
+        return file_path.suffix.lower() in self.supported_extensions

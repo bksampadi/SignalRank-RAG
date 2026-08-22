@@ -6,10 +6,10 @@ from signalrank.components.retrieval.result import SearchResult
 
 class FakeRetrievalService:
     def retrieve(
-            self,
-            query: str,
-            mode: str,
-            top_k: int = 10,
+        self,
+        query: str,
+        mode: str,
+        top_k: int = 10,
     ) -> list[SearchResult]:
         return [
             SearchResult(
@@ -52,11 +52,8 @@ def test_dense_retrieval_endpoint():
 
     body = response.json()
 
-    assert body["query"] == (
-        "robotic vehicle exploring the red planet"
-    )
+    assert body["query"] == ("robotic vehicle exploring the red planet")
     assert body["mode"] == "dense"
-
 
     assert len(body["results"]) == 1
     assert body["results"][0]["chunk_id"] == "dense_chunk"

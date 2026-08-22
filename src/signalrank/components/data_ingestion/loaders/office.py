@@ -32,6 +32,7 @@ _ELEMENT_TYPE_MAP = {
     "EmailAddress": "email_address",
 }
 
+
 def load_office(file_path: Path) -> list[DocumentElement]:
     """
     Load an Office document into structured document elements.
@@ -46,7 +47,7 @@ def load_office(file_path: Path) -> list[DocumentElement]:
     ) as span:
         try:
             partitioner = _PARTITIONERS[extension]
-            
+
         except KeyError as exc:
             logfire.error(
                 "Unsupported Office file type",
@@ -54,10 +55,8 @@ def load_office(file_path: Path) -> list[DocumentElement]:
                 file_type=extension,
             )
 
-            raise ValueError(
-                f"Unsupported Office file type: {extension}"
-            ) from exc
-         
+            raise ValueError(f"Unsupported Office file type: {extension}") from exc
+
         try:
             raw_elements = partitioner(
                 filename=str(file_path),
@@ -80,9 +79,7 @@ def load_office(file_path: Path) -> list[DocumentElement]:
                 elements.append(
                     DocumentElement(
                         text=text,
-                        element_type=_element_type(
-                            raw_element.category
-                        ),
+                        element_type=_element_type(raw_element.category),
                         element_index=len(elements),
                         metadata=metadata,
                     )
@@ -102,6 +99,7 @@ def load_office(file_path: Path) -> list[DocumentElement]:
                 file_type=extension,
             )
             raise
+
 
 def _element_type(category: str) -> str:
     """

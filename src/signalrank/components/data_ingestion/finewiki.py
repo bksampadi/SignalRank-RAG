@@ -14,16 +14,15 @@ class FineWikiSource:
     """
 
     def __init__(
-            self,
-            language: str = "en",
+        self,
+        language: str = "en",
     ):
 
         self._language = language
 
-
     def stream_documents(
-            self,
-            limit: int | None = None,
+        self,
+        limit: int | None = None,
     ) -> Iterator[ParsedDocument]:
         dataset = load_dataset(
             "HuggingFaceFW/finewiki",
@@ -54,9 +53,7 @@ class FineWikiSource:
                             "title": row["title"],
                             "url": row["url"],
                             "wikidata_id": row["wikidata_id"],
-                            "date_modified": row[
-                                "date_modified"
-                            ],
+                            "date_modified": row["date_modified"],
                             "language": row["in_language"],
                         },
                     ),
@@ -68,5 +65,3 @@ class FineWikiSource:
                     "license": "CC BY-SA 4.0",
                 },
             )
-
-            

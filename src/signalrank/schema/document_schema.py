@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass
@@ -9,11 +8,11 @@ class DocumentRecord:
     source: str
     source_type: str
 
-    page_number: Optional[int] = None
+    page_number: int | None = None
 
-    document_id: Optional[str] = None
+    document_id: str | None = None
 
-    author: Optional[str] = None
-    created_at: Optional[str] = None
+    author: str | None = None
+    created_at: str | None = None
 
-    chunk_id: Optional[str] = None
+    chunk_id: str | None = None

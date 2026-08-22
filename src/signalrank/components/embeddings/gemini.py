@@ -1,20 +1,17 @@
 import logfire
-
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 
 
 class GeminiEmbedding:
     def __init__(
-            self,
-            model_name: str,
-            dimension: int,
-            batch_size: int = 50,
-            api_key: str | None = None,
+        self,
+        model_name: str,
+        dimension: int,
+        batch_size: int = 50,
+        api_key: str | None = None,
     ):
-        if batch_size <=0:
-            raise ValueError(
-                "batch_size must be greater than zero"
-            )
+        if batch_size <= 0:
+            raise ValueError("batch_size must be greater than zero")
 
         self._dimension = dimension
         self._batch_size = batch_size
@@ -32,14 +29,13 @@ class GeminiEmbedding:
             batch_size=batch_size,
         )
 
-
     @property
     def dimension(self) -> int:
         return self._dimension
 
     def embed_documents(
-            self,
-            texts: list[str],
+        self,
+        texts: list[str],
     ) -> list[list[float]]:
 
         with logfire.span(
@@ -55,8 +51,8 @@ class GeminiEmbedding:
             )
 
     def embed_query(
-            self,
-            text: str,
+        self,
+        text: str,
     ) -> list[float]:
 
         with logfire.span(

@@ -6,9 +6,9 @@ from signalrank.components.data_ingestion.document import DocumentElement
 
 
 def load_text(
-        file_path: Path,
-        *,
-        encoding: str = "utf-8",
+    file_path: Path,
+    *,
+    encoding: str = "utf-8",
 ) -> list[DocumentElement]:
     """
     Load a plain-text or Markdown file.
@@ -27,17 +27,17 @@ def load_text(
 
             if not text:
                 span.set_attribute(
-                    "text_extracted", 
+                    "text_extracted",
                     False,
                 )
                 return []
 
             span.set_attribute(
-                "text_extracted", 
+                "text_extracted",
                 True,
             )
             span.set_attribute(
-                "character_count", 
+                "character_count",
                 len(text),
             )
 
@@ -58,4 +58,3 @@ def load_text(
                 file_path=str(file_path),
             )
             raise
-        

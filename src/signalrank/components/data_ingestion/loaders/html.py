@@ -6,7 +6,6 @@ from bs4.element import Tag
 
 from signalrank.components.data_ingestion.document import DocumentElement
 
-
 _BLOCK_TAGS = (
     "h1",
     "h2",
@@ -23,8 +22,8 @@ _BLOCK_TAGS = (
 
 
 def load_html(
-        file_path: Path,
-        encoding: str = "utf-8",
+    file_path: Path,
+    encoding: str = "utf-8",
 ) -> list[DocumentElement]:
     """
     Extract meaningful block-level text from an HTML document.
@@ -157,7 +156,7 @@ def _extract_table_text(table: Tag) -> str:
     for row in table.find_all("tr"):
         if row.find_parent("table") is not table:
             continue
-        
+
         cells = [
             cell.get_text(" ", strip=True)
             for cell in row.find_all(
@@ -166,11 +165,7 @@ def _extract_table_text(table: Tag) -> str:
             )
         ]
 
-        cells = [
-            cell
-            for cell in cells
-            if cell
-        ]
+        cells = [cell for cell in cells if cell]
 
         if cells:
             rows.append("\t".join(cells))

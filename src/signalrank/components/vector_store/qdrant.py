@@ -6,10 +6,10 @@ from qdrant_client import QdrantClient, models
 
 
 def create_qdrant_client(
-        *,
-        url: str | None = None,
-        api_key: str | None = None,
-        path: Path | None = None,
+    *,
+    url: str | None = None,
+    api_key: str | None = None,
+    path: Path | None = None,
 ) -> QdrantClient:
     if url is not None:
         return QdrantClient(
@@ -27,10 +27,10 @@ def create_qdrant_client(
 
 class QdrantVectorStore:
     def __init__(
-            self,
-            dimension: int,
-            collection_name: str = "signalrank",
-            client: QdrantClient | None = None
+        self,
+        dimension: int,
+        collection_name: str = "signalrank",
+        client: QdrantClient | None = None,
     ):
         self._collection_name = collection_name
         self._dimension = dimension
@@ -42,7 +42,6 @@ class QdrantVectorStore:
             collection=collection_name,
             dimension=dimension,
         ):
-
             if not self._client.collection_exists(collection_name):
                 self._client.create_collection(
                     collection_name=collection_name,
@@ -67,24 +66,16 @@ class QdrantVectorStore:
             )
         )
 
-
     def upsert(
-            self,
-            ids: list[str],
-            vectors: list[list[float]],
-            payloads: list[dict[str, object]],
+        self,
+        ids: list[str],
+        vectors: list[list[float]],
+        payloads: list[dict[str, object]],
     ) -> None:
 
-        if not (
-            len(ids)
-            == len(vectors)
-            == len(payloads)
-        ):
-            raise ValueError(
-                "ids, vectors, and payloads must have "
-                "the same length"
-            )
-        
+        if not (len(ids) == len(vectors) == len(payloads)):
+            raise ValueError("ids, vectors, and payloads must have the same length")
+
         points = []
 
         for chunk_id, vector, payload in zip(
@@ -99,7 +90,7 @@ class QdrantVectorStore:
                     f"{self._dimension}, got "
                     f"{len(vector)}"
                 )
-            
+
             point_payload = dict(payload)
             point_payload["chunk_id"] = chunk_id
 
@@ -124,9 +115,9 @@ class QdrantVectorStore:
             )
 
     def search(
-            self,
-            query_vector: list[float],
-            top_k: int = 10,
+        self,
+        query_vector: list[float],
+        top_k: int = 10,
     ) -> list[tuple[str, float]]:
 
         if len(query_vector) != self._dimension:
@@ -151,7 +142,7 @@ class QdrantVectorStore:
 
         return [
             (
-                str(point.payload["chunk_id"]), 
+                str(point.payload["chunk_id"]),
                 float(point.score),
             )
             for point in result.points

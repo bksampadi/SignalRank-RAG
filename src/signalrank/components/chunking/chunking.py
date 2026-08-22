@@ -12,15 +12,12 @@ class DocumentChunker:
     Deterministically split parsed documents into overlapping text chunks.
     """
 
-    def __init__(
-            self,
-            config: ChunkingConfig
-    ):
+    def __init__(self, config: ChunkingConfig):
         self.config = config
 
     def chunk_documents(
-            self,
-            documents: list[ParsedDocument],
+        self,
+        documents: list[ParsedDocument],
     ) -> list[DocumentChunk]:
         """
         Chunk a collection of parsed documents.
@@ -41,12 +38,11 @@ class DocumentChunker:
 
             return chunks
 
-
     def chunk_document(
-            self,
-            document: ParsedDocument,
+        self,
+        document: ParsedDocument,
     ) -> list[DocumentChunk]:
-        """"
+        """ "
         Chunk one parsed document.
         """
 
@@ -76,9 +72,7 @@ class DocumentChunker:
                     element_index,
                     _,
                 ) in element_spans
-                if element_end > start
-                and element_start < end
-
+                if element_end > start and element_start < end
             )
 
             element_types = tuple(
@@ -89,8 +83,7 @@ class DocumentChunker:
                     _,
                     element_type,
                 ) in element_spans
-                if element_end > start
-                and element_start < end
+                if element_end > start and element_start < end
             )
 
             chunks.append(
@@ -100,7 +93,7 @@ class DocumentChunker:
                         chunk_index=chunk_index,
                         start=start,
                         end=end,
-                        text=chunk_text
+                        text=chunk_text,
                     ),
                     doc_id=document.doc_id,
                     source_path=document.source_path,
@@ -168,7 +161,7 @@ class DocumentChunker:
             )
 
         return "".join(parts), spans
-    
+
     @staticmethod
     def _create_chunk_id(
         document: ParsedDocument,
@@ -181,17 +174,8 @@ class DocumentChunker:
         Create a reproducible content-sensitive chunk ID.
         """
 
-        identity = (
-            f"{document.doc_id}\0"
-            f"{chunk_index}\0"
-            f"{start}\0"
-            f"{end}\0"
-            f"{text}"
-        )
+        identity = f"{document.doc_id}\0{chunk_index}\0{start}\0{end}\0{text}"
 
-        digest = hashlib.sha256(
-            identity.encode("utf-8")
-        ).hexdigest()[:16]
+        digest = hashlib.sha256(identity.encode("utf-8")).hexdigest()[:16]
 
         return f"chunk_{digest}"
-            

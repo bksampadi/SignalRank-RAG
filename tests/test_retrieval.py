@@ -2,9 +2,10 @@ from signalrank.components.chunking.chunk import DocumentChunk
 from signalrank.components.retrieval.bm25 import BM25Retriever
 from signalrank.components.retrieval.dense import DenseRetriever
 
+
 def make_chunk(
-        text: str,
-        index: int,
+    text: str,
+    index: int,
 ) -> DocumentChunk:
     return DocumentChunk(
         chunk_id=f"chunk_{index}",
@@ -18,6 +19,7 @@ def make_chunk(
         element_indices=(index,),
         element_types=("text",),
     )
+
 
 def test_bm25_returns_most_relevant_chunk():
 
@@ -38,44 +40,42 @@ def test_bm25_returns_most_relevant_chunk():
 
     retriever = BM25Retriever(chunks)
 
-    results = retriever.retrieve(
-        "Mars rover geological samples"
-    )
+    results = retriever.retrieve("Mars rover geological samples")
 
     assert results[0].chunk_id == chunks[0].chunk_id
 
 
 class FakeEmbeddingProvider:
     @property
-    def dimension(self)-> int:
+    def dimension(self) -> int:
         return 3
 
     def embed_query(self, text: str) -> list[float]:
         return [0.1, 0.2, 0.3]
 
     def embed_documents(
-            self,
-            texts: list[str],
+        self,
+        texts: list[str],
     ) -> list[list[float]]:
         return [[0.1, 0.2, 0.3] for _ in texts]
 
 
 class FakeVectorStore:
     def search(
-            self,
-            query_vector: list[float],
-            top_k: int = 10,
+        self,
+        query_vector: list[float],
+        top_k: int = 10,
     ) -> list[tuple[str, float]]:
-        return[
+        return [
             ("chunk_1", 0.92),
             ("chunk_2", 0.81),
         ]
 
 
 def make_dense_chunk(
-        chunk_id: str,
-        text: str,
-        index: int,
+    chunk_id: str,
+    text: str,
+    index: int,
 ) -> DocumentChunk:
     return DocumentChunk(
         chunk_id=chunk_id,
@@ -111,9 +111,7 @@ def test_dense_retriever_returns_ranked_results():
         chunks=chunks,
     )
 
-    results = retriever.retrieve(
-        "vehicle exploring the red planet"
-    )
+    results = retriever.retrieve("vehicle exploring the red planet")
 
     assert len(results) == 2
 

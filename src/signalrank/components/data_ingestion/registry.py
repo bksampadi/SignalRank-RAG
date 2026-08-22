@@ -2,21 +2,19 @@ from collections.abc import Callable
 from functools import partial
 from pathlib import Path
 
-
 from signalrank.components.data_ingestion.document import DocumentElement
 from signalrank.components.data_ingestion.loaders.html import load_html
+from signalrank.components.data_ingestion.loaders.office import load_office
 from signalrank.components.data_ingestion.loaders.pdf import load_pdf
 from signalrank.components.data_ingestion.loaders.text import load_text
-from signalrank.components.data_ingestion.loaders.office import load_office
-
 
 Loader = Callable[[Path], list[DocumentElement]]
 
 
 def get_loader(
-        extension: str,
-        *,
-        encoding: str = "utf-8",
+    extension: str,
+    *,
+    encoding: str = "utf-8",
 ) -> Loader:
     """
     Return the appropriate loader for a file extension.
@@ -41,7 +39,5 @@ def get_loader(
 
     if extension in {".docx", ".pptx", ".xlsx"}:
         return load_office
-    
-    raise ValueError(
-        f"No loader registered for extension: {extension}"
-    )
+
+    raise ValueError(f"No loader registered for extension: {extension}")

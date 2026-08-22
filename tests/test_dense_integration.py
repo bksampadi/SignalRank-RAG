@@ -7,9 +7,9 @@ from signalrank.components.vector_store.qdrant import QdrantVectorStore
 
 
 def make_chunk(
-        chunk_id: str,
-        text: str,
-        index: int,
+    chunk_id: str,
+    text: str,
+    index: int,
 ) -> DocumentChunk:
     return DocumentChunk(
         chunk_id=chunk_id,
@@ -23,6 +23,7 @@ def make_chunk(
         element_indices=(index,),
         element_types=("text",),
     )
+
 
 def test_real_dense_retrieval_returns_semantic_match():
     chunks = [
@@ -45,9 +46,7 @@ def test_real_dense_retrieval_returns_semantic_match():
 
     embedding_provider = SentenceTransformerEmbedding()
 
-    vectors = embedding_provider.embed_documents(
-        [chunk.text for chunk in chunks]
-    )
+    vectors = embedding_provider.embed_documents([chunk.text for chunk in chunks])
 
     vector_store = QdrantVectorStore(
         dimension=embedding_provider.dimension,
@@ -66,10 +65,7 @@ def test_real_dense_retrieval_returns_semantic_match():
         ],
     )
 
-    chunk_map = {
-        chunk.chunk_id: chunk
-        for chunk in chunks
-    }
+    chunk_map = {chunk.chunk_id: chunk for chunk in chunks}
 
     retriever = DenseRetriever(
         embedding_provider=embedding_provider,

@@ -6,17 +6,17 @@ from signalrank.services.retrieval_service import RetrievalService
 
 class FakeRetriever:
     def __init__(
-            self,
-            chunk_id: str,
+        self,
+        chunk_id: str,
     ):
         self._chunk_id = chunk_id
 
     def retrieve(
-            self,
-            query: str,
-            top_k: int = 10,
+        self,
+        query: str,
+        top_k: int = 10,
     ) -> list[SearchResult]:
-        return[
+        return [
             SearchResult(
                 chunk_id=self._chunk_id,
                 doc_id="doc_test",

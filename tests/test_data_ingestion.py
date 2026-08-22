@@ -17,9 +17,7 @@ def test_ingests_single_text_file(tmp_path):
         encoding="utf-8",
     )
 
-    documents = DataIngestion(
-        config
-    ).initiate_data_ingestion()
+    documents = DataIngestion(config).initiate_data_ingestion()
 
     assert len(documents) == 1
 
@@ -64,16 +62,11 @@ def test_ingests_supported_files_recursively(tmp_path):
         recursive=True,
     )
 
-    documents = DataIngestion(
-        config
-    ).initiate_data_ingestion()
+    documents = DataIngestion(config).initiate_data_ingestion()
 
     assert len(documents) == 2
 
-    source_paths = {
-        document.source_path
-        for document in documents
-    }
+    source_paths = {document.source_path for document in documents}
 
     assert source_paths == {
         "first.md",
@@ -101,9 +94,7 @@ def test_non_recursive_ingestion_ignores_nested_files(tmp_path):
         recursive=False,
     )
 
-    documents = DataIngestion(
-        config
-    ).initiate_data_ingestion()
+    documents = DataIngestion(config).initiate_data_ingestion()
 
     assert len(documents) == 1
     assert documents[0].source_path == "root.txt"
@@ -127,9 +118,7 @@ def test_skips_empty_documents(tmp_path):
         source_path=corpus,
     )
 
-    documents = DataIngestion(
-        config
-    ).initiate_data_ingestion()
+    documents = DataIngestion(config).initiate_data_ingestion()
 
     assert len(documents) == 1
     assert documents[0].source_path == "content.txt"
@@ -200,9 +189,7 @@ def test_normalises_configured_extensions(tmp_path):
         supported_extensions=("TXT",),
     )
 
-    documents = DataIngestion(
-        config
-    ).initiate_data_ingestion()
+    documents = DataIngestion(config).initiate_data_ingestion()
 
     assert len(documents) == 1
     assert documents[0].file_type == ".txt"
@@ -216,12 +203,10 @@ def test_missing_source_raises_file_not_found_error(tmp_path):
     )
 
     with pytest.raises(
-        FileNotFoundError, 
+        FileNotFoundError,
         match="Source path does not exist",
-    ):                 
-        DataIngestion(
-            config
-        ).initiate_data_ingestion()
+    ):
+        DataIngestion(config).initiate_data_ingestion()
 
 
 def test_all_empty_documents_raise_value_error(tmp_path):
@@ -246,9 +231,8 @@ def test_all_empty_documents_raise_value_error(tmp_path):
         ValueError,
         match="Data ingestion produced no documents",
     ):
-        DataIngestion(
-            config
-        ).initiate_data_ingestion()
+        DataIngestion(config).initiate_data_ingestion()
+
 
 def test_unsupported_single_file_raises_value_error(tmp_path):
     source_file = tmp_path / "document.xyz"
@@ -265,6 +249,4 @@ def test_unsupported_single_file_raises_value_error(tmp_path):
         ValueError,
         match="Unsupported file type",
     ):
-        DataIngestion(
-            config
-        ).initiate_data_ingestion()
+        DataIngestion(config).initiate_data_ingestion()

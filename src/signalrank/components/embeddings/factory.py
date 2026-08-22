@@ -7,20 +7,18 @@ from signalrank.components.embeddings.sentence_transformer import (
     SentenceTransformerEmbedding,
 )
 
+
 def create_embedding_provider(
-        provider: EmbeddingProviderType,
-        *,
-        model_name: str | None = None,
-        api_key: str | None = None,
-        dimension: int | None = None,
+    provider: EmbeddingProviderType,
+    *,
+    model_name: str | None = None,
+    api_key: str | None = None,
+    dimension: int | None = None,
 ) -> EmbeddingProvider:
 
     if provider == "sentence_transformer":
         return SentenceTransformerEmbedding(
-            model_name=(
-                model_name
-                or "sentence-transformers/all-mpnet-base-v2"
-            )
+            model_name=(model_name or "sentence-transformers/all-mpnet-base-v2")
         )
 
     if provider == "gemini":
@@ -30,6 +28,4 @@ def create_embedding_provider(
             api_key=api_key,
         )
 
-    raise ValueError(
-        f"Unsupported embedding provider: {provider}"
-    )
+    raise ValueError(f"Unsupported embedding provider: {provider}")

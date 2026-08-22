@@ -6,8 +6,8 @@ from signalrank.components.retrieval.result import SearchResult
 
 class BM25Retriever:
     def __init__(
-            self,
-            chunks: list[DocumentChunk],
+        self,
+        chunks: list[DocumentChunk],
     ):
         self._chunks = chunks
 
@@ -19,9 +19,9 @@ class BM25Retriever:
         self._retriever.index(corpus_tokens)
 
     def retrieve(
-            self,
-            query: str,
-            top_k: int = 10,
+        self,
+        query: str,
+        top_k: int = 10,
     ) -> list[SearchResult]:
         if not query.strip():
             return []

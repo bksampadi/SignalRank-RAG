@@ -10,12 +10,8 @@ def _normalise_extension(extension: str) -> str:
 
     return extension
 
+
 def normalise_supported_extensions(
-              extensions: tuple[str, ...],
-              ) -> tuple[str, ...]:
-                return tuple(
-                       dict.fromkeys(
-                            _normalise_extension(ext)
-                            for ext in extensions
-                        )
-                )
+    extensions: tuple[str, ...],
+) -> tuple[str, ...]:
+    return tuple(dict.fromkeys(_normalise_extension(ext) for ext in extensions))

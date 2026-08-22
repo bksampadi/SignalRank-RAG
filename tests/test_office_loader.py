@@ -17,10 +17,7 @@ def test_loads_docx(tmp_path):
 
     elements = load_office(file_path)
 
-    text = "\n".join(
-        element.text
-        for element in elements
-    )
+    text = "\n".join(element.text for element in elements)
 
     assert "SignalRank Report" in text
     assert "Evidence retrieval matters." in text
@@ -31,9 +28,7 @@ def test_loads_pptx(tmp_path):
 
     presentation = Presentation()
 
-    slide = presentation.slides.add_slide(
-        presentation.slide_layouts[1]
-    )
+    slide = presentation.slides.add_slide(presentation.slide_layouts[1])
 
     slide.shapes.title.text = "SignalRank"
     slide.placeholders[1].text = "Retrieval evidence"
@@ -42,10 +37,7 @@ def test_loads_pptx(tmp_path):
 
     elements = load_office(file_path)
 
-    text = "\n".join(
-        element.text
-        for element in elements
-    )
+    text = "\n".join(element.text for element in elements)
 
     assert "SignalRank" in text
     assert "Retrieval evidence" in text
@@ -67,10 +59,7 @@ def test_loads_xlsx(tmp_path):
 
     elements = load_office(file_path)
 
-    text = "\n".join(
-        element.text
-        for element in elements
-    )
+    text = "\n".join(element.text for element in elements)
 
     assert "Claim" in text
     assert "Drug improves outcome" in text
