@@ -50,6 +50,7 @@ dev = [
     "notebook",
     "httpx2>=2.10.0",
     "ruff>=0.16.4",
+    "pyright>=1.1.411",
 ]
 
 [tool.setuptools.packages.find]
@@ -58,3 +59,11 @@ where = ["src"]
 [tool.logfire]
 service_name = "signalrank-rag"
 environment = "development"
+
+[tool.ruff]
+target-version = "py311"
+
+[tool.pyright]
+include = ["src"]
+pythonVersion = "3.11"
+typeCheckingMode = "basic"

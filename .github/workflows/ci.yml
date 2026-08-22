@@ -18,28 +18,49 @@ concurrency:
 
 jobs:
     quality:
-      name: Code quality
-      runs-on: ubuntu-latest
-      timeout-minutes: 10
+        name: Code quality
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
 
       steps:
-        - name: Check out repository
-          uses: actions/checkout@v6
+            - name: Check out repository
+              uses: actions/checkout@v6
 
-        - name: Install uv and Python
-          uses: astral-sh/setup-uv@v9.0.0
-          with:
-            python-version: "3.13"
-            enable-cache: true
+            - name: Install uv and Python
+              uses: astral-sh/setup-uv@v9.0.0
+              with:
+                python-version: "3.13"
+                enable-cache: true
 
-        - name: Install project
-          run: uv sync --locked --dev
+            - name: Install project
+              run: uv sync --locked --dev
 
-        - name: Lint
-          run: uv run ruff check .
+            - name: Lint
+              run: uv run --locked ruff check .
 
-        - name: Check formatting
-          run: uv run ruff format --check .
+            - name: Check formatting
+              run: uv run ruff format --check .
+
+    typecheck:
+        name: Static typing
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+
+        steps:
+            - name: Check out repository
+              uses: actions/checkout@v6
+
+            - name: Install uv and Python
+              uses: astral-sh/setup-uv@v9.0.0
+              with:
+                  python-version: "3.13"
+                  enable-cache: true
+            
+            - name: Install project
+              run: uv sync --locked --dev
+
+            - name: Type check
+              run: uv run pyright
 
     test:
         name: ${{ matrix.os }} / Python ${{ matrix.python-version }}
