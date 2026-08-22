@@ -2,6 +2,7 @@
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
+
 [project]
 name = "signalrank-rag"
 version = "0.1.0"
@@ -12,17 +13,11 @@ dependencies = [
     # Configuration
     "PyYAML>=6.0,<7",
     "python-box>=7.4,<8",
+
     # Observability
     "logfire[fastapi,requests]>=4.40,<5",
-    # Lexical retrieval
-    "bm25s>=0.3.10,<0.4",
-    # Dense retrieval / embeddings / reranking
-    "sentence-transformers>=5.7,<6",
-    # Vector store
-    "qdrant-client>=1.19,<2",
-    # API
-    "fastapi>=0.141,<1",
-    "uvicorn[standard]>=0.52,<1",
+
+    # Data ingestion
     "pymupdf",
     "beautifulsoup4>=4.15.0",
     "python-docx>=1.2.0",
@@ -30,21 +25,45 @@ dependencies = [
     "openpyxl>=3.1.5",
     "defusedxml>=0.7.1",
     "unstructured[docx,pptx,xlsx]>=0.22.18",
-    "streamlit>=1.61.1",
-    "requests>=2.34.2",
     "datasets>=5.0.1",
+
+    # Retrieval
+    "bm25s>=0.3.10,<0.4",
+    "sentence-transformers>=5.7,<6",
+    "torch",
+
+    # Vector store
+    "qdrant-client>=1.19,<2",
+
+    # Cloud embeddings
     "langchain-google-genai>=4.3.4",
     "google-generativeai>=0.8.6",
+
+    # API / UI
+    "fastapi>=0.141,<1",
+    "uvicorn[standard]>=0.52,<1",
+    "streamlit>=1.61.1",
+    "requests>=2.34.2",
 ]
 
-[project.optional-dependencies]
 
+[project.optional-dependencies]
 eval = [
     "pandas>=3,<4",
 ]
 
-[dependency-groups]
 
+[tool.uv.sources]
+torch = { index = "pytorch-cpu" }
+
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+
+[dependency-groups]
 dev = [
     "pytest>=9.0,<10",
     "notebook",
@@ -53,15 +72,19 @@ dev = [
     "pyright>=1.1.411",
 ]
 
+
 [tool.setuptools.packages.find]
 where = ["src"]
+
 
 [tool.logfire]
 service_name = "signalrank-rag"
 environment = "development"
 
+
 [tool.ruff]
 target-version = "py311"
+
 
 [tool.pyright]
 include = ["src"]
