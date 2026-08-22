@@ -1,93 +1,112 @@
 # SignalRank-RAG
 
 [![CI](https://github.com/bksampadi/SignalRank-RAG/actions/workflows/ci.yml/badge.svg)](https://github.com/bksampadi/SignalRank-RAG/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/Python-3.11--3.13-3776AB?logo=python&logoColor=white)
+[![Release](https://img.shields.io/github/v/release/bksampadi/SignalRank-RAG)](https://github.com/bksampadi/SignalRank-RAG/releases)
 
-**Current release: `v0.1.0`**
+**Reproducible retrieval, from documents to ranked results.**
 
-SignalRank-RAG is an open-source framework for building and evaluating Retrieval-Augmented Generation (RAG) systems.
+SignalRank-RAG is an open-source, production-oriented RAG system combining deterministic document processing, lexical and semantic retrieval, configurable embeddings, vector search, observability, testing, and containerized execution.
 
-`v0.1.0` establishes a reproducible retrieval foundation with deterministic ingestion, lexical and semantic retrieval, vector search, API and UI layers, observability, testing, and containerized execution.
 
-The project focuses on:
-
-- Document ingestion
-- Chunking strategies
-- Embedding pipelines
-- Lexical and semantic retrieval
-- Vector search
-- Reranking
-- Evaluation
-- Observability
-- Containerized deployment
+**Python · FastAPI · Qdrant · BM25 · SentenceTransformers · Gemini · Logfire · Streamlit · Docker · CI**
 
 ## Architecture
+
 
 ```mermaid
 flowchart TB
 
-    DOCS[Documents] --> ING[Ingestion]
-    ING --> CHUNK[Deterministic Chunking]
+    DOCS(["📄  Your Documents"])
+    USER(["👤  Your Query"])
 
-    CHUNK --> BMIDX[(BM25 Index)]
-    CHUNK --> EMB[SentenceTransformer]
-    EMB --> QD[(Qdrant)]
+    ING["Ingestion"]
+    CHUNK["Deterministic<br/>Chunking"]
 
-    USER[User] --> UI[Streamlit]
-    UI --> API[FastAPI]
-    API --> SERVICE[Retrieval Service]
+    BMIDX[("BM25 Index")]
+    EMB["✦ Embedding<br/>Provider"]
+    QD[("Qdrant")]
 
-    SERVICE --> BM25[BM25 Retrieval]
-    SERVICE --> DENSE[Dense Retrieval]
+    UI["Streamlit"]
+    API["FastAPI"]
+    RET{"Retrieval<br/>Service"}
 
-    BMIDX --> BM25
-    QD --> DENSE
+    BM["BM25<br/>Retrieval"]
+    DENSE["✦ Dense<br/>Retrieval"]
 
-    BM25 --> RESULTS[Ranked Results]
-    DENSE --> RESULTS
+    RESULT(["✦  Ranked Results"])
+
+
+    DOCS --> ING --> CHUNK
+
+    CHUNK --> BMIDX
+    CHUNK --> EMB --> QD
+
+
+    USER --> UI --> API --> RET
+
+    RET --> BM
+    RET --> DENSE
+
+    BMIDX -. "lexical index" .-> BM
+    QD -. "semantic index" .-> DENSE
+
+    BM --> RESULT
+    DENSE --> RESULT
+
+
+    classDef entry fill:#172033,stroke:#64748b,stroke-width:1.5px,color:#f8fafc;
+    classDef process fill:#f8fafc,stroke:#94a3b8,stroke-width:1.5px,color:#0f172a;
+    classDef ai fill:#f3e8ff,stroke:#8b5cf6,stroke-width:2px,color:#4c1d95;
+    classDef store fill:#ecfdf5,stroke:#10b981,stroke-width:2px,color:#064e3b;
+    classDef app fill:#eff6ff,stroke:#3b82f6,stroke-width:1.5px,color:#1e3a8a;
+    classDef route fill:#ede9fe,stroke:#7c3aed,stroke-width:2px,color:#3b0764;
+    classDef result fill:#172033,stroke:#a78bfa,stroke-width:2.5px,color:#ffffff;
+
+    class DOCS,USER entry;
+    class ING,CHUNK,BM process;
+    class EMB,DENSE ai;
+    class BMIDX,QD store;
+    class UI,API app;
+    class RET route;
+    class RESULT result;
 ```
 
-## Currently Implemented
+The same deterministic chunks feed both lexical and semantic retrieval. Dense retrieval uses a configurable embedding provider and Qdrant vector storage, while the application layer exposes retrieval through a shared FastAPI service.
 
-### Ingestion and provenance
+## Highlights
 
-- Recursive TXT and Markdown ingestion
-- Structured DOCX, PPTX, and XLSX ingestion
-- Portable relative source references
-- Deterministic, content-sensitive document IDs
-- Preservation of document and element provenance
+- Deterministic multi-format ingestion with document and chunk provenance
+- BM25 lexical and dense semantic retrieval over the same chunk corpus
+- Replaceable SentenceTransformer and Gemini embedding providers
+- Qdrant vector storage with dimension validation and memory/local/remote modes
+- FastAPI + Streamlit application layer with distributed Logfire tracing
+- 35 automated tests, multi-platform CI, locked dependencies, and containerized execution
 
-### Chunking and embeddings
 
-- Deterministic chunking with configurable overlap
-- Embedding provider abstraction
-- SentenceTransformer embedding provider
+## Technical Overview
 
-### Retrieval
+| Area | Implementation |
+| --- | --- |
+| **Ingestion** | TXT, Markdown, PDF, HTML, DOCX, PPTX, and XLSX |
+| **Provenance** | Portable source references and deterministic document/chunk IDs |
+| **Chunking** | Configurable size and overlap |
+| **Lexical retrieval** | BM25 |
+| **Dense retrieval** | Embedding-based semantic search |
+| **Embeddings** | Provider protocol with SentenceTransformer and Gemini implementations |
+| **Local embedding model** | `sentence-transformers/all-mpnet-base-v2` |
+| **Cloud embedding model** | `gemini-embedding-2-preview` |
+| **Vector storage** | Qdrant with dimension validation |
+| **Configuration** | Typed dataclasses backed by YAML |
+| **API** | FastAPI |
+| **UI** | Streamlit |
+| **Observability** | Logfire distributed tracing |
+| **Testing** | 35 automated tests |
+| **CI** | Python 3.11–3-13 on Ubuntu and Windows |
+| **Packaging** | `uv` with locked dependencies |
+| **Runtime** | Docker and Docker Compose |
 
-- BM25 lexical retrieval
-- Dense semantic retrieval
-- Qdrant vector store integration
-- Shared retrieval interface
-- Ranked search result model
-- Retrieval service supporting BM25 and dense modes
-
-### Application layer
-
-- FastAPI retrieval API
-- Health endpoint
-- Retrieval endpoint
-- Streamlit retrieval interface
-
-### Engineering
-
-- Distributed observability and tracing with Logfire
-- Reproducible dependency management with `uv`
-- Docker containerization
-- Docker Compose orchestration
-- Automated CI across Linux and Windows
-- 35 automated tests
-
-## Quick Start with Docker
+## Quick Start
 
 The simplest way to run SignalRank-RAG is with Docker Compose.
 
@@ -101,13 +120,11 @@ Then open:
 - **FastAPI documentation:** `http://localhost:8000/docs`
 - **Health endpoint:** `http://localhost:8000/health`
 
-The Compose setup runs the Streamlit UI and FastAPI retrieval service as separate services.
+The Streamlit UI and FastAPI backend run as separate services.
 
-Logfire telemetry is optional. SignalRank-RAG runs without Logfire credentials and sends telemetry only when valid Logfire configuration is available.
+## Development
 
-## Development Setup
-
-SignalRank-RAG uses `uv` for Python environment and dependency management.
+SignalRank-RAG uses [`uv`](https://docs.astral.sh/uv/) for Python environment and dependency management.
 
 Install dependencies:
 
@@ -118,99 +135,149 @@ uv sync --extra eval
 Run the test suite:
 
 ```bash
-uv run pytest -v
+uv run --locked python -m pytest -v
 ```
 
-Run the FastAPI service:
+Run FastAPI:
 
 ```bash
 uv run uvicorn signalrank.api.main:app --reload
 ```
 
-Run the Streamlit UI in a second terminal:
+Run Streamlit in a second terminal:
 
 ```bash
 uv run streamlit run src/signalrank/ui/app.py
 ```
 
-By default, the Streamlit UI expects the retrieval API at:
+By default, Streamlit expects the retrieval API at:
 
 ```text
 http://127.0.0.1:8000
 ```
 
-This can be overridden with the `SIGNALRANK_API_URL` environment variable.
+Override this with:
 
-Continuous integration currently tests:
+```text
+SIGNALRANK_API_URL
+```
 
-- Python 3.11–3.13 on Ubuntu
-- Python 3.11 on Windows
+## Configuration
+
+Application behavior is configured through `configs/config.yaml`.
+
+For example:
+
+```yaml
+chunking:
+  chunk_size: 1000
+  chunk_overlap: 200
+
+embedding:
+  provider: sentence_transformer
+  model_name: sentence-transformers/all-mpnet-base-v2
+
+retrieval:
+  top_k: 5
+
+qdrant:
+  mode: local
+  collection_name: signalrank_finewiki
+  path: data/qdrant
+```
+
+
+Qdrant supports three execution modes:
+
+```text
+memory  → ephemeral in-memory storage
+local   → persistent local storage
+remote  → remote Qdrant / Qdrant Cloud
+```
+
+Deployment-specific endpoints and credentials are supplied through environment variables:
+
+```text
+GEMINI_API_KEY
+QDRANT_URL
+QDRANT_API_KEY
+LOGFIRE_TOKEN
+```
+Do not store secrets in `config.yaml`.
 
 ## Observability
 
 SignalRank-RAG uses Logfire for structured and distributed tracing across the retrieval path.
 
-The current tracing baseline covers:
-
 ```text
-Streamlit retrieval interaction
-        ↓
-HTTP request
-        ↓
-FastAPI retrieval endpoint
-        ↓
-Retrieval operation
+Streamlit
+    ↓
+HTTP
+    ↓
+FastAPI
+    ↓
+Retrieval
+    ↓
+Embedding
+    ↓
+Qdrant
 ```
 
-Manual retrieval spans record operational metadata such as retrieval mode, `top_k`, query length, and session identifier.
 
-HTTP and FastAPI instrumentation provide request timing, status, and distributed trace context.
+Manual spans record operational metadata including retrieval mode, embedding provider and dimension, collection, workload size, and execution timing. Raw query and document text is not intentionally attached to manual telemetry.
 
-Raw query text is not intentionally attached to SignalRank-RAG's manual telemetry spans.
+Logfire is optional. SignalRank-RAG can run without Logfire credentials.
 
-## v0.1.0
+## Project Structure
 
-`v0.1.0` establishes the baseline retrieval substrate for SignalRank-RAG.
+```text
+SignalRank-RAG/
+├── .github/
+│   └── workflows/
+│       └── ci.yml              Multi-platform CI
+│
+├── configs/                    YAML application configuration
+├── data/                       Local datasets and vector-store data
+├── scripts/                    Development and pipeline utilities
+│
+├── src/
+│   └── signalrank/
+│       ├── api/                FastAPI application
+│       ├── components/
+│       │   ├── chunking/       Deterministic document chunking
+│       │   ├── data_ingestion/ Document discovery and loaders
+│       │   ├── embeddings/     Embedding providers and factory
+│       │   ├── retrieval/      BM25 and dense retrieval
+│       │   └── vector_store/   Qdrant integration
+│       ├── config/             Typed configuration loading
+│       ├── pipelines/          Ingestion and indexing workflows
+│       ├── services/           Application-level services
+│       └── ui/                 Streamlit interface
+│
+├── tests/                      Automated test suite
+│
+├── .dockerignore
+├── .gitignore
+├── .python-version
+├── compose.yaml
+├── Dockerfile
+├── LICENSE
+├── pyproject.toml
+├── README.md
+└── uv.lock
+```
 
-It includes:
+## Current Status
 
-- Deterministic ingestion
-- Structured document loading
-- Provenance preservation
-- Deterministic chunking
-- SentenceTransformer embeddings
-- BM25 retrieval
-- Dense retrieval
-- Qdrant vector storage
-- FastAPI service layer
-- Streamlit interface
-- Distributed tracing
-- Automated testing and CI
-- Docker
-- Docker Compose
+`v0.1.0` established the initial retrieval foundation with deterministic ingestion, chunking, lexical and dense retrieval, Qdrant vector storage, API and UI layers, distributed tracing, automated testing, CI, and containerized execution.
 
-Future releases will extend this foundation with additional retrieval, ranking, and evaluation capabilities.
+Current development extends that baseline with configurable embedding providers, Gemini embeddings, model-aware vector dimensions, and configurable Qdrant execution modes.
 
 ## Roadmap
 
-- [x] Project scaffold
-- [x] Exception handling
-- [x] Configuration management
-- [x] Data ingestion
-- [x] Structured Office document ingestion
-- [x] Deterministic chunking
-- [x] Embedding provider abstraction
-- [x] SentenceTransformer embedding baseline
-- [x] BM25 lexical retrieval
-- [x] Qdrant vector store
-- [x] Dense retrieval
-- [x] FastAPI retrieval API
-- [x] Streamlit interface
-- [x] Distributed observability and tracing
-- [x] Docker containerization
-- [x] Docker Compose orchestration
 - [ ] Hybrid retrieval
 - [ ] Reranking
 - [ ] Evaluation framework
 - [ ] Retrieval diagnostics
-- [ ] Public API deployment
+- [ ] Embedding model comparison
+- [ ] Public deployment
