@@ -126,17 +126,23 @@ jobs:
                   mkdir -p .ci-data
                   printf '%s\n' \
                     'Mars rovers explore the surface of the red planet.'  \
-                    'Retrieval systems rank relevant evidence for user queries.'
+                    'Retrieval systems rank relevant evidence for user queries.' \
                     > .ci-data/smoke.txt
+            
+            - name: Verify smoke-text corpus
+              run:  |
+                  test -s .ci-data/smoke.txt
+                  cat .ci-data/smoke.txt
 
             - name: Index smoke-test corpus
               run: |
                   docker run --rm \
+                    -e LOGFIRE_IGNORE_NO_CONFIG=1 \
                     -v "${{ github.workspace }}/.ci-data:/app/data" \
                     signalrank-rag:test \
                     python -c "from signalrank.pipelines.indexing_pipeline import IndexingPipeline; IndexingPipeline().run()"
 
-            - name: Start container
+            - name: Start API container
               run:  |
                   docker run -d \
                     --name signalrank-rag \
@@ -177,9 +183,9 @@ jobs:
 
             - name: Show container logs on failure
               if: failure()
-              run: docker logs signalrank-rag
+              run: docker logs signalrank-rag 2>/dev/null || true
 
             - name: Stop container
               if: always()
-              run: docker rm -f signalrank-rag
+              run: docker rm -f signalrank-rag 2>/dev/null || true
 
