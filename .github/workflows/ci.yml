@@ -109,7 +109,7 @@ jobs:
             - name: Check out repository
               uses: actions/checkout@v6
 
-            - name: Setup up Docker Buildx
+            - name: Set up Docker Buildx
               uses: docker/setup-buildx-action@v4
 
             - name: Build Docker image
@@ -119,19 +119,36 @@ jobs:
                   load: true
                   tags: signalrank-rag:test
                   cache-from: type=gha
-                  cache-to: type=gha, mode=max
+                  cache-to: type=gha,mode=max
+
+            - name: Create smoke-test corpus
+              run:  |
+                  mkdir -p .ci-data
+                  printf '%s\n' \
+                    'Mars rovers explore the surface of the red planet.'  \
+                    'Retrieval systems rank relevant evidence for user queries.'
+                    > .ci-data/smoke.txt
+
+            - name: Index smoke-test corpus
+              run: |
+                  docker run --rm \
+                    -v "${{ github.workspace }}/.ci-data:/app/data" \
+                    signalrank-rag:test \
+                    python -c "from signalrank.pipelines.indexing_pipeline import IndexingPipeline; IndexingPipeline().run()"
 
             - name: Start container
               run:  |
                   docker run -d \
                     --name signalrank-rag \
                     -p 8000:8000 \
+                    -v "${{ github.workspace }}/.ci-data:/app/data" \
                     signalrank-rag:test
 
             - name: Wait for API health
               run:  |
-                  for i in {1..30}; do
+                  for i in {1..90}; do
                     if curl --fail --silent http://localhost:8000/health; then
+                      echo
                       echo "SignalRank API is healthy"
                       exit 0
                     fi
@@ -143,6 +160,20 @@ jobs:
                   echo "API failed to become healthy"
                   docker logs signalrank-rag
                   exit 1
+
+            - name: Test BM25 retrieval
+              run:  |
+                  curl --fail --silent --show-error \
+                    -X POST http://localhost:8000/retriev \
+                    -H "Content-Type: application/json" \
+                    -d '{"query":"Mar rover","mode":"bm25","top_k":2}'
+
+            - name: Test dense retrieval
+              run:  |
+                  curl --fail --silent --show-error \
+                    -X POST http://localhost:8000/retrieve \
+                    -H "Content-Type: application/json" \
+                    -d '{"query":"Mars rover","mode":"dense","top_k":2}'
 
             - name: Show container logs on failure
               if: failure()
