@@ -74,6 +74,35 @@ flowchart TB
 
 The same deterministic chunks feed both lexical and semantic retrieval. Dense retrieval uses a configurable embedding provider and Qdrant vector storage, while the application layer exposes retrieval through a shared FastAPI service.
 
+### AI & Software Engineering
+
+SignalRank-RAG separates orchestration from implementation, keeping meaningful retrieval and AI components independently replaceable.
+
+```mermaid
+flowchart LR
+    P["⚙️ Retrieval Pipeline"]
+
+    P --> E["✦ Embeddings"]
+    P --> R["⌕ Retrieval"]
+    P --> V["◉ Vector Store"]
+
+    E --> E1["SentenceTransformers"]
+    E --> E2["Gemini"]
+
+    R --> R1["BM25"]
+    R --> R2["Dense"]
+
+    V --> V1["Qdrant"]
+
+    classDef core fill:#172033,stroke:#64748b,stroke-width:2px,color:#f8fafc;
+    classDef boundary fill:#f3e8ff,stroke:#8b5cf6,stroke-width:2px,color:#4c1d95;
+    classDef impl fill:#f8fafc,stroke:#94a3b8,stroke-width:1.5px,color:#0f172a;
+
+    class P core;
+    class E,R,V boundary;
+    class E1,E2,R1,R2,V1 impl;
+```
+
 ## Highlights
 
 - Deterministic multi-format ingestion with document and chunk provenance
