@@ -95,7 +95,7 @@ The same deterministic chunks feed both lexical and semantic retrieval. Dense re
 | **Dense retrieval** | Embedding-based semantic search |
 | **Embeddings** | Provider protocol with SentenceTransformer and Gemini implementations |
 | **Local embedding model** | `sentence-transformers/all-mpnet-base-v2` |
-| **Cloud embedding model** | `gemini-embedding-2-preview` |
+| **Cloud embedding model** | `gemini-embedding-2` |
 | **Vector storage** | Qdrant with dimension validation |
 | **Configuration** | Typed dataclasses backed by YAML |
 | **API** | FastAPI |
