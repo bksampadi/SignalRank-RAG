@@ -170,7 +170,7 @@ jobs:
             - name: Test BM25 retrieval
               run:  |
                   curl --fail --silent --show-error \
-                    -X POST http://localhost:8000/retriev \
+                    -X POST http://localhost:8000/retrieve \
                     -H "Content-Type: application/json" \
                     -d '{"query":"Mar rover","mode":"bm25","top_k":2}'
 
