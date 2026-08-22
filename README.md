@@ -263,27 +263,35 @@ Logfire is optional. SignalRank-RAG can run without Logfire credentials.
 SignalRank-RAG/
 ├── .github/
 │   └── workflows/
-│       └── ci.yml              Multi-platform CI
+│       └── ci.yml                 Multi-platform CI
 │
-├── configs/                    YAML application configuration
-├── data/                       Local datasets and vector-store data
-├── scripts/                    Development and pipeline utilities
+├── .streamlit/                    Streamlit configuration
+├── configs/                       YAML application configuration
+├── scripts/                       Development and pipeline utilities
 │
 ├── src/
 │   └── signalrank/
-│       ├── api/                FastAPI application
+│       ├── api/                   FastAPI application and schemas
+│       │
 │       ├── components/
-│       │   ├── chunking/       Deterministic document chunking
-│       │   ├── data_ingestion/ Document discovery and loaders
-│       │   ├── embeddings/     Embedding providers and factory
-│       │   ├── retrieval/      BM25 and dense retrieval
-│       │   └── vector_store/   Qdrant integration
-│       ├── config/             Typed configuration loading
-│       ├── pipelines/          Ingestion and indexing workflows
-│       ├── services/           Application-level services
-│       └── ui/                 Streamlit interface
+│       │   ├── chunking/          Deterministic document chunking
+│       │   ├── data_ingestion/    Document discovery and loaders
+│       │   ├── embeddings/        Embedding providers and factory
+│       │   ├── retrieval/         BM25 and dense retrieval
+│       │   └── vector_store/      Qdrant integration
+│       │
+│       ├── config/                Typed configuration loading
+│       ├── constants/             Shared constants
+│       ├── evaluation/            Evaluation module
+│       ├── observability/         Logfire configuration
+│       ├── pipelines/             Ingestion, indexing, and retrieval workflows
+│       ├── prompts/               Prompt definitions
+│       ├── schema/                Shared schemas
+│       ├── services/              Application-level services
+│       ├── ui/                    Streamlit interface
+│       └── utils/                 Shared utilities
 │
-├── tests/                      Automated test suite
+├── tests/                         Automated test suite
 │
 ├── .dockerignore
 ├── .gitignore
