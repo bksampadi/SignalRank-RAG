@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import logfire
 from qdrant_client import QdrantClient
 
@@ -6,8 +8,10 @@ from signalrank.components.embeddings.factory import create_embedding_provider
 from signalrank.components.retrieval.base import Retriever
 from signalrank.components.retrieval.bm25 import BM25Retriever
 from signalrank.components.retrieval.dense import DenseRetriever
+from signalrank.components.retrieval.hybrid import HybridRetriever
 from signalrank.components.vector_store.qdrant import QdrantVectorStore
 from signalrank.config.configuration import ConfigurationManager
+from signalrank.constants import CONFIG_FILE_PATH
 from signalrank.pipelines.data_ingestion_pipeline import (
     DataIngestionPipeline,
 )
@@ -20,8 +24,16 @@ class RetrievalPipeline:
     The dense vector index must already exist.
     """
 
-    def build(self) -> tuple[Retriever, Retriever]:
-        config = ConfigurationManager().load()
+    def __init__(
+        self,
+        config_filepath: str | Path = CONFIG_FILE_PATH,
+    ):
+        self._config_filepath = config_filepath
+
+    def build(
+        self,
+    ) -> tuple[Retriever, Retriever, Retriever]:
+        config = ConfigurationManager(self._config_filepath).load()
 
         with logfire.span(
             "Build retrieval pipeline",
@@ -31,7 +43,9 @@ class RetrievalPipeline:
         ):
             # 1. Load documents
 
-            documents = DataIngestionPipeline().run()
+            documents = DataIngestionPipeline(
+                config_filepath=self._config_filepath,
+            ).run()
 
             # 2. Reconstruct deterministic chunks
 
@@ -87,4 +101,13 @@ class RetrievalPipeline:
                 chunks=chunk_map,
             )
 
-            return bm25, dense
+            # 8. Build hybrid retriever
+
+            hybrid = HybridRetriever(
+                bm25_retriever=bm25,
+                dense_retriever=dense,
+                rrf_k=config.retrieval.rrf_k,
+                candidate_multiplier=config.retrieval.candidate_multiplier,
+            )
+
+            return bm25, dense, hybrid

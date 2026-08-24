@@ -23,6 +23,8 @@ chunking:
 
 retrieval:
   top_k: 5
+  rrf_k: 60
+  candidate_multiplier: 4
 
 qdrant:
   mode: local

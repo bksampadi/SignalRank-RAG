@@ -79,6 +79,24 @@ def test_bm25_retrieval_endpoint():
     assert body["results"][0]["chunk_id"] == "bm25_chunk"
 
 
+def test_hybrid_retrieval_endpoint():
+    response = client.post(
+        "/retrieve",
+        json={
+            "query": "Mars rover samples",
+            "mode": "hybrid",
+            "top_k": 3,
+        },
+    )
+
+    assert response.status_code == 200
+
+    body = response.json()
+
+    assert body["mode"] == "hybrid"
+    assert body["results"][0]["chunk_id"] == "hybrid_chunk"
+
+
 def test_invalid_retrieval_mode_is_rejected():
     response = client.post(
         "/retrieve",
