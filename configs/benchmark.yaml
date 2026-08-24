@@ -1,0 +1,41 @@
+data_ingestion:
+  source_path: data/benchmarks/retrieval/corpus/
+  recursive: true
+  encoding: utf-8
+  supported_extensions:
+    - .pdf
+    - .txt
+    - .md
+    - .markdown
+    - .html
+    - .htm
+    - .docx
+    - .pptx
+    - .xlsx
+
+embedding:
+  provider: sentence_transformer
+  model_name: sentence-transformers/all-mpnet-base-v2
+
+chunking:
+  chunk_size: 1000
+  chunk_overlap: 200
+
+retrieval:
+  top_k: 5
+  rrf_k: 60
+  candidate_multiplier: 4
+
+qdrant:
+  mode: local
+  collection_name: signalrank_retrieval_benchmark_v5
+  path: data/qdrant
+
+logfire:
+  service_name: signalrank-rag
+  environment: local
+  system_metrics: false
+
+finewiki:
+  language: enwiki
+  batch_size: 256

@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import logfire
 from qdrant_client import QdrantClient
 
@@ -6,6 +8,7 @@ from signalrank.components.chunking.chunking import DocumentChunker
 from signalrank.components.embeddings.factory import create_embedding_provider
 from signalrank.components.vector_store.qdrant import QdrantVectorStore
 from signalrank.config.configuration import ConfigurationManager
+from signalrank.constants import CONFIG_FILE_PATH
 from signalrank.pipelines.data_ingestion_pipeline import (
     DataIngestionPipeline,
 )
@@ -18,8 +21,18 @@ class IndexingPipeline:
     Ingest -> chunk -> embed -> store in Qdrant.
     """
 
-    def run(self) -> list[DocumentChunk]:
-        config = ConfigurationManager().load()
+    def __init__(
+        self,
+        config_filepath: str | Path = CONFIG_FILE_PATH,
+    ):
+        self._config_filepath = config_filepath
+
+    def run(
+        self,
+        *,
+        recreate: bool = False,
+    ) -> list[DocumentChunk]:
+        config = ConfigurationManager(self._config_filepath).load()
 
         with logfire.span(
             "Indexing pipeline",
@@ -29,7 +42,9 @@ class IndexingPipeline:
         ) as span:
             # 1. Ingest documents
 
-            documents = DataIngestionPipeline().run()
+            documents = DataIngestionPipeline(
+                config_filepath=self._config_filepath,
+            ).run()
 
             span.set_attribute(
                 "document_count",
@@ -73,6 +88,14 @@ class IndexingPipeline:
             )
 
             try:
+                if recreate and qdrant_client.collection_exists(
+                    config.qdrant.collection_name
+                ):
+
+                    qdrant_client.delete_collection(
+                        collection_name=config.qdrant.collection_name,
+                    )
+
                 vector_store = QdrantVectorStore(
                     dimension=embedding_provider.dimension,
                     collection_name=config.qdrant.collection_name,
