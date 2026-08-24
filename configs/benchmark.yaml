@@ -1,5 +1,5 @@
 data_ingestion:
-  source_path: data/
+  source_path: data/benchmarks/retrieval/corpus/
   recursive: true
   encoding: utf-8
   supported_extensions:
@@ -28,7 +28,7 @@ retrieval:
 
 qdrant:
   mode: local
-  collection_name: signalrank_finewiki
+  collection_name: signalrank_retrieval_benchmark_v5
   path: data/qdrant
 
 logfire:

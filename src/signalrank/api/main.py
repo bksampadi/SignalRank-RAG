@@ -27,12 +27,13 @@ def logfire_request_attributes(
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    bm25, dense = RetrievalPipeline().build()
+    bm25, dense, hybrid = RetrievalPipeline().build()
 
     app.state.retrieval_service = RetrievalService(
         retrievers={
             "bm25": bm25,
             "dense": dense,
+            "hybrid": hybrid,
         }
     )
 

@@ -73,10 +73,18 @@ class RetrievalConfig:
     """Configuration for retrieval."""
 
     top_k: int = 5
+    rrf_k: int = 60
+    candidate_multiplier: int = 4
 
     def __post_init__(self) -> None:
         if self.top_k <= 0:
             raise ValueError("top_k must be greater than zero")
+
+        if self.rrf_k <= 0:
+            raise ValueError("rrf_k must be greater than zero")
+
+        if self.candidate_multiplier <= 0:
+            raise ValueError("candidate_multiplier must be greater than zero")
 
 
 QdrantMode = Literal[

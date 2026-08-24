@@ -6,7 +6,7 @@
 
 **Reproducible retrieval, from documents to ranked results.**
 
-SignalRank-RAG is an open-source, production-oriented RAG system combining deterministic document processing, lexical and semantic retrieval, configurable embeddings, vector search, observability, testing, and containerized execution.
+SignalRank-RAG is an open-source, production-oriented retrieval system for RAG, combining deterministic document processing, lexical and semantic retrieval, configurable embeddings, vector search, observability, testing, and containerized execution.
 
 
 **Python · FastAPI · Qdrant · BM25 · SentenceTransformers · Gemini · Logfire · Streamlit · Docker · CI**
@@ -33,6 +33,7 @@ flowchart TB
 
     BM["BM25<br/>Retrieval"]
     DENSE["✦ Dense<br/>Retrieval"]
+    HYBRID["✦ Hybrid<br/>Fusion"]
 
     RESULT(["✦  Ranked Results"])
 
@@ -47,12 +48,17 @@ flowchart TB
 
     RET --> BM
     RET --> DENSE
+    RET --> HYBRID
+
+    BM --> HYBRID
+    DENSE --> HYBRID
 
     BMIDX -. "lexical index" .-> BM
     QD -. "semantic index" .-> DENSE
 
     BM --> RESULT
     DENSE --> RESULT
+    HYBRID --> RESULT
 
 
     classDef entry fill:#172033,stroke:#64748b,stroke-width:1.5px,color:#f8fafc;
@@ -68,13 +74,50 @@ flowchart TB
     class EMB,DENSE ai;
     class BMIDX,QD store;
     class UI,API app;
-    class RET route;
+    class RET,HYBRID route;
     class RESULT result;
 ```
 
 The same deterministic chunks feed both lexical and semantic retrieval. Dense retrieval uses a configurable embedding provider and Qdrant vector storage, while the application layer exposes retrieval through a shared FastAPI service.
 
-### AI & Software Engineering
+
+## Adversarial Retrieval Benchmark
+
+A 30-query challenge set stresses lexical, dense, and hybrid retrieval under deliberately difficult ranking conditions.
+
+<p align="center">
+  <img src="docs/assets/signalrank_benchmark.svg"
+       alt="SignalRank-RAG adversarial retrieval benchmark"
+       width="900">
+</p>
+
+Dense retrieval performs best overall, while BM25 contributes top-1 wins that dense retrieval misses. The BM25 × Dense oracle reaches **Hit@1 = 0.633**, showing that the current hybrid fusion does not yet fully exploit their complementarity.
+
+### Detailed Results
+
+| Mode | Hit@1 | MRR@5 |
+| --- | ---: | ---: |
+| BM25 | 0.433 | 0.590 |
+| Dense | **0.567** | **0.756** |
+| Hybrid | 0.467 | 0.653 |
+
+Dense achieved **Hit@5 = 1.000**, retrieving the relevant document within the top five for all 30 benchmark queries. The remaining gap is therefore substantially a ranking problem rather than a candidate-retrieval problem.
+
+### BM25 × Dense Complementarity
+
+| Outcome | Queries |
+| --- | ---: |
+| Both correct @1 | 11 |
+| BM25 only @1 | 2 |
+| Dense only @1 | 6 |
+| Both wrong @1 | 11 |
+
+**Oracle Hit@1:** 0.633  
+**Top-1 agreement:** 0.567
+
+Naive hybrid fusion does not automatically improve ranking quality despite the complementary top-1 behavior of BM25 and dense retrieval. These results motivate improved fusion, retrieval diagnostics, and reranking.
+
+## AI & Software Engineering
 
 SignalRank-RAG separates orchestration from implementation, keeping meaningful retrieval and AI components independently replaceable.
 
@@ -91,26 +134,32 @@ flowchart LR
 
     R --> R1["BM25"]
     R --> R2["Dense"]
+    R --> R3
+
+    R1 --> R3["Hybrid Fusion"]
+    R2 --> R3
 
     V --> V1["Qdrant"]
 
     classDef core fill:#172033,stroke:#64748b,stroke-width:2px,color:#f8fafc;
     classDef boundary fill:#f3e8ff,stroke:#8b5cf6,stroke-width:2px,color:#4c1d95;
     classDef impl fill:#f8fafc,stroke:#94a3b8,stroke-width:1.5px,color:#0f172a;
+    classDef fusion fill:#ede9fe,stroke:#7c3aed,stroke-width:2px,color:#3b0764;
 
     class P core;
     class E,R,V boundary;
     class E1,E2,R1,R2,V1 impl;
+    class R3 fusion;
 ```
 
 ## Highlights
 
 - Deterministic multi-format ingestion with document and chunk provenance
-- BM25 lexical and dense semantic retrieval over the same chunk corpus
+- BM25 lexical, dense semantic, and hybrid retrieval over shared deterministic chunks
 - Replaceable SentenceTransformer and Gemini embedding providers
 - Qdrant vector storage with dimension validation and memory/local/remote modes
 - FastAPI + Streamlit application layer with distributed Logfire tracing
-- 35 automated tests, multi-platform CI, locked dependencies, and containerized execution
+- 50 automated tests, multi-platform CI, locked dependencies, and containerized execution
 
 
 ## Technical Overview
@@ -122,6 +171,7 @@ flowchart LR
 | **Chunking** | Configurable size and overlap |
 | **Lexical retrieval** | BM25 |
 | **Dense retrieval** | Embedding-based semantic search |
+| **Hybrid retrieval** | Rank fusion over BM25 and dense retrieval |
 | **Embeddings** | Provider protocol with SentenceTransformer and Gemini implementations |
 | **Local embedding model** | `sentence-transformers/all-mpnet-base-v2` |
 | **Cloud embedding model** | `gemini-embedding-2` |
@@ -130,7 +180,7 @@ flowchart LR
 | **API** | FastAPI |
 | **UI** | Streamlit |
 | **Observability** | Logfire distributed tracing |
-| **Testing** | 35 automated tests |
+| **Testing** | 50 automated tests |
 | **CI** | Python 3.11–3.13 on Ubuntu and Windows |
 | **Packaging** | `uv` with locked dependencies |
 | **Runtime** | Docker and Docker Compose |
@@ -263,35 +313,35 @@ Logfire is optional. SignalRank-RAG can run without Logfire credentials.
 SignalRank-RAG/
 ├── .github/
 │   └── workflows/
-│       └── ci.yml                 Multi-platform CI
+│       └── ci.yml                 # Multi-platform CI
 │
-├── .streamlit/                    Streamlit configuration
-├── configs/                       YAML application configuration
-├── scripts/                       Development and pipeline utilities
+├── .streamlit/                    # Streamlit configuration
+├── configs/                       # YAML application configuration
+├── scripts/                       # Development and pipeline utilities
 │
 ├── src/
 │   └── signalrank/
-│       ├── api/                   FastAPI application and schemas
+│       ├── api/                   # FastAPI application and schemas
 │       │
 │       ├── components/
-│       │   ├── chunking/          Deterministic document chunking
-│       │   ├── data_ingestion/    Document discovery and loaders
-│       │   ├── embeddings/        Embedding providers and factory
-│       │   ├── retrieval/         BM25 and dense retrieval
-│       │   └── vector_store/      Qdrant integration
+│       │   ├── chunking/          # Deterministic document chunking
+│       │   ├── data_ingestion/    # Document discovery and loaders
+│       │   ├── embeddings/        # Embedding providers and factory
+│       │   ├── retrieval/         # BM25, dense and hybrid retrieval
+│       │   └── vector_store/      # Qdrant integration
 │       │
-│       ├── config/                Typed configuration loading
-│       ├── constants/             Shared constants
-│       ├── evaluation/            Evaluation module
-│       ├── observability/         Logfire configuration
-│       ├── pipelines/             Ingestion, indexing, and retrieval workflows
-│       ├── prompts/               Prompt definitions
-│       ├── schema/                Shared schemas
-│       ├── services/              Application-level services
-│       ├── ui/                    Streamlit interface
-│       └── utils/                 Shared utilities
+│       ├── config/                # Typed configuration loading
+│       ├── constants/             # Shared constants
+│       ├── evaluation/            # Evaluation module
+│       ├── observability/         # Logfire configuration
+│       ├── pipelines/             # Ingestion, indexing, and retrieval workflows
+│       ├── prompts/               # Prompt definitions
+│       ├── schema/                # Shared schemas
+│       ├── services/              # Application-level services
+│       ├── ui/                    # Streamlit interface
+│       └── utils/                 #  Shared utilities
 │
-├── tests/                         Automated test suite
+├── tests/                         # Automated test suite
 │
 ├── .dockerignore
 ├── .gitignore
@@ -308,13 +358,14 @@ SignalRank-RAG/
 
 `v0.1.0` established the initial retrieval foundation with deterministic ingestion, chunking, lexical and dense retrieval, Qdrant vector storage, API and UI layers, distributed tracing, automated testing, CI, and containerized execution.
 
-Current development extends that baseline with configurable embedding providers, Gemini embeddings, model-aware vector dimensions, and configurable Qdrant execution modes.
+Current development extends that foundation with configurable embedding providers, hybrid retrieval, retrieval evaluation, and an adversarial retrieval benchmark. The next milestone is public deployment, followed by retrieval diagnostics and improved fusion/reranking.
 
 ## Roadmap
 
-- [ ] Hybrid retrieval
-- [ ] Reranking
-- [ ] Evaluation framework
-- [ ] Retrieval diagnostics
-- [ ] Embedding model comparison
+- [x] Hybrid retrieval
+- [x] Evaluation framework
+- [x] Adversarial retrieval benchmark
 - [ ] Public deployment
+- [ ] Retrieval diagnostics
+- [ ] Improved fusion and reranking
+- [ ] Embedding model comparison
