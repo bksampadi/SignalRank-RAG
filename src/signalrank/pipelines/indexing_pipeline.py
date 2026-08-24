@@ -25,7 +25,7 @@ class IndexingPipeline:
         self,
         config_filepath: str | Path = CONFIG_FILE_PATH,
     ):
-        self._config_filepath = config_filepath
+        self._config_filepath = Path(config_filepath)
 
     def run(
         self,
@@ -91,7 +91,6 @@ class IndexingPipeline:
                 if recreate and qdrant_client.collection_exists(
                     config.qdrant.collection_name
                 ):
-
                     qdrant_client.delete_collection(
                         collection_name=config.qdrant.collection_name,
                     )

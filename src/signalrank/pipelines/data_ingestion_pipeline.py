@@ -13,7 +13,7 @@ class DataIngestionPipeline:
         self,
         config_filepath: str | Path = CONFIG_FILE_PATH,
     ):
-        self._config_filepath = config_filepath
+        self._config_filepath = Path(config_filepath)
 
     def run(self) -> list[ParsedDocument]:
         config = ConfigurationManager(self._config_filepath).load()
