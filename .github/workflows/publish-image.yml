@@ -1,0 +1,46 @@
+name: Publish container image
+
+on:
+    push:
+        branches:
+            - main
+            - features/azure-deployment
+
+env:
+    REGISTRY: ghcr.io
+    IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+    publish:
+        runs-on: ubuntu-latest
+
+        permissions:
+            contents: read
+            packages: write
+
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v6
+
+            - name: Log in to GHCR
+              uses: docker/login-action@v3
+              with:
+                registry: ${{ env.REGISTRY }}
+                username: ${{ github.actor }}
+                password: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Set image name
+              run:  |
+                echo "IMAGE_NAME_LOWER=${GITHUB_REPOSITORY,,}" >> "$GITHUB_ENV"
+
+            - name: Build and push image
+              uses: docker/build-push-action@v6
+              with:
+                context: .
+                push: true
+                tags:   |
+                    ghcr.io/${{ env.IMAGE_NAME_LOWER }}:${{ github.sha }}
+                    ghcr.io/${{ env.IMAGE_NAME_LOWER }}:latest
+                labels: |
+                    org.opencontainers.image.source=https://github.com/${{ github.repository }}
+                    org.opencontainers.image.revision=${{ github.sha }}
