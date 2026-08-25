@@ -24,7 +24,7 @@ jobs:
 
         steps:
             - name: Check out repository
-              uses: actions/checkout@v6
+              uses: actions/checkout@v7
 
             - name: Install uv and Python
               uses: astral-sh/setup-uv@v9.0.0
@@ -48,7 +48,7 @@ jobs:
 
         steps:
             - name: Check out repository
-              uses: actions/checkout@v6
+              uses: actions/checkout@v7
 
             - name: Install uv and Python
               uses: astral-sh/setup-uv@v9.0.0
@@ -86,7 +86,7 @@ jobs:
 
         steps:
             - name: Check out repository
-              uses: actions/checkout@v6
+              uses: actions/checkout@v7
 
             - name: Install uv and Python
               uses: astral-sh/setup-uv@v9.0.0
@@ -107,7 +107,7 @@ jobs:
 
         steps:
             - name: Check out repository
-              uses: actions/checkout@v6
+              uses: actions/checkout@v7
 
             - name: Set up Docker Buildx
               uses: docker/setup-buildx-action@v4
@@ -147,6 +147,7 @@ jobs:
                   docker run -d \
                     --name signalrank-rag \
                     -p 8000:8000 \
+                    -e LOGFIRE_IGNORE_TO_CONFIG=1 \
                     -v "${{ github.workspace }}/.ci-data:/app/data" \
                     signalrank-rag:test
 
@@ -172,7 +173,7 @@ jobs:
                   curl --fail --silent --show-error \
                     -X POST http://localhost:8000/retrieve \
                     -H "Content-Type: application/json" \
-                    -d '{"query":"Mar rover","mode":"bm25","top_k":2}'
+                    -d '{"query":"Mars rover","mode":"bm25","top_k":2}'
 
             - name: Test dense retrieval
               run:  |
