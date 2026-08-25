@@ -1,7 +1,6 @@
 from pathlib import Path
 
 import logfire
-from qdrant_client import QdrantClient
 
 from signalrank.components.chunking.chunking import DocumentChunker
 from signalrank.components.embeddings.factory import create_embedding_provider
@@ -9,7 +8,10 @@ from signalrank.components.retrieval.base import Retriever
 from signalrank.components.retrieval.bm25 import BM25Retriever
 from signalrank.components.retrieval.dense import DenseRetriever
 from signalrank.components.retrieval.hybrid import HybridRetriever
-from signalrank.components.vector_store.qdrant import QdrantVectorStore
+from signalrank.components.vector_store.qdrant import (
+    QdrantVectorStore,
+    create_configured_qdrant_client,
+)
 from signalrank.config.configuration import ConfigurationManager
 from signalrank.constants import CONFIG_FILE_PATH
 from signalrank.pipelines.data_ingestion_pipeline import (
@@ -69,8 +71,8 @@ class RetrievalPipeline:
 
             # 5. Connect to existing Qdrant index
 
-            qdrant_client = QdrantClient(
-                path=str(config.qdrant.path),
+            qdrant_client = create_configured_qdrant_client(
+                config.qdrant,
             )
 
             if not qdrant_client.collection_exists(config.qdrant.collection_name):
