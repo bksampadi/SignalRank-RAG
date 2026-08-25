@@ -1,0 +1,3 @@
+Python is a high-level programming language designed around readable syntax and a large ecosystem of libraries. It supports multiple programming styles, including procedural, object-oriented, and functional approaches, and is widely used in automation, web development, scientific computing, data analysis, machine learning, and artificial intelligence.
+
+Python code is executed by an interpreter, although implementations may compile source code into intermediate bytecode before execution. Its dynamic type system makes rapid development convenient, while type hints can document expected interfaces and help static analysis tools catch some mistakes before runtime.

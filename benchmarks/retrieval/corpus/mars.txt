@@ -1,0 +1,3 @@
+Robotic rovers on Mars investigate the planet by imaging terrain, drilling or abrading rock surfaces, and collecting geological observations. Some missions cache rock and soil samples for possible later return to Earth. Scientific instruments on the rover can identify minerals and examine evidence of ancient environmental conditions.
+
+A rover cannot depend on continuous direct control from Earth because radio signals take time to travel between the planets. It therefore uses autonomous navigation to identify hazards, choose safe paths, and move across the surface with limited human intervention.

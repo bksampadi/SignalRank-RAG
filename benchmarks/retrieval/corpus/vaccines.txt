@@ -1,0 +1,3 @@
+Vaccines prepare the immune system to recognize a pathogen before a future exposure causes disease. They present an antigen, genetic instruction, or another safe representation of the pathogen so that immune cells can develop memory. Later exposure can then trigger a faster and more effective immune response.
+
+Vaccination is preventive rather than an antibiotic treatment for an existing bacterial infection. The two approaches can both reduce disease burden, but they act at different stages: vaccines reduce the chance or severity of future infection, while antibiotics target susceptible bacteria during an infection.

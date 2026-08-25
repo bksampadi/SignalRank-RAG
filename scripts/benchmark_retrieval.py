@@ -12,7 +12,7 @@ from signalrank.pipelines.data_ingestion_pipeline import DataIngestionPipeline
 from signalrank.pipelines.retrieval_pipeline import RetrievalPipeline
 from signalrank.services.retrieval_service import RetrievalService
 
-QUERY_FILE_PATH = "data/benchmarks/retrieval/queries.json"
+QUERY_FILE_PATH = "benchmarks/retrieval/queries.json"
 
 
 def load_benchmark_queries() -> list[dict]:

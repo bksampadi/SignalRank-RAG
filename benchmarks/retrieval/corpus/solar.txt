@@ -1,0 +1,3 @@
+Solar photovoltaic panels generate electricity when photons are absorbed by semiconductor materials and create mobile charge carriers. An internal electric field separates those charges, allowing current to flow through an external circuit. The process converts incoming light directly into electrical energy without a rotating generator.
+
+Solar output varies with irradiance, panel orientation, shading, temperature, and the efficiency of the photovoltaic cells. Energy storage systems such as batteries can help shift electricity produced during sunny periods to times when sunlight is weak or unavailable.

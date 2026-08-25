@@ -1,5 +1,5 @@
 data_ingestion:
-  source_path: data/benchmarks/retrieval/corpus/
+  source_path: benchmarks/retrieval/corpus/
   recursive: true
   encoding: utf-8
   supported_extensions:

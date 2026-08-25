@@ -1,0 +1,3 @@
+Weather stations monitor local atmospheric conditions using instruments that record temperature, rainfall, wind speed, wind direction, humidity, and barometric pressure. A rain gauge measures precipitation, a thermometer records air temperature, and an anemometer measures wind speed. These observations are usually collected repeatedly so that changes over hours or days can be compared.
+
+Forecasting is not the same as measurement. Forecasts combine recent observations with numerical models of the atmosphere to estimate future conditions. A station can therefore provide direct evidence about what is happening at a location now, while a forecast predicts what may happen later.

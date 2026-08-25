@@ -1,0 +1,3 @@
+Rechargeable lithium-ion batteries store energy through reversible chemical reactions between two electrodes. During charging, lithium ions move through the electrolyte toward the negative electrode while electrons travel through an external circuit. During discharge, the direction reverses and electrical energy becomes available to power a device.
+
+Battery performance depends on electrode chemistry, temperature, charging rate, and repeated cycling. Very fast charging or prolonged exposure to high temperatures can accelerate degradation, reducing the amount of charge the cell can hold over time.
