@@ -1,0 +1,3 @@
+Neural networks are machine-learning models built from layers of connected computational units. During training, model parameters are adjusted so that predictions become more accurate on examples from a dataset. Backpropagation computes how changes in parameters affect the loss, and an optimizer uses that information to update the weights.
+
+A trained neural network can generalize patterns beyond exact examples seen during training, but performance depends on the data distribution and objective used during learning. Large models can capture complex relationships, yet they may still fail when inputs differ substantially from the training data.

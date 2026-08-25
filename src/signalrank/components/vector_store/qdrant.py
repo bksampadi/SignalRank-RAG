@@ -1,8 +1,11 @@
+import os
 from pathlib import Path
 from uuid import NAMESPACE_URL, uuid5
 
 import logfire
 from qdrant_client import QdrantClient, models
+
+from signalrank.config.settings import QdrantConfig
 
 
 def create_qdrant_client(
@@ -23,6 +26,37 @@ def create_qdrant_client(
         )
 
     return QdrantClient(":memory:")
+
+
+def create_configured_qdrant_client(
+    config: QdrantConfig,
+) -> QdrantClient:
+    if config.mode == "remote":
+        url = os.getenv("QDRANT_URL")
+        api_key = os.getenv("QDRANT_API_KEY")
+
+        if not url:
+            raise RuntimeError("QDRANT_URL is required when Qdrant mode is 'remote'")
+
+        if not api_key:
+            raise RuntimeError(
+                "QDRANT_API_KEY is required when Qdrant mode is 'remote'"
+            )
+
+        return create_qdrant_client(
+            url=url,
+            api_key=api_key,
+        )
+
+    if config.mode == "local":
+        if config.path is None:
+            raise RuntimeError("Qdrant path is required when mode is 'local'")
+
+        return create_qdrant_client(
+            path=config.path,
+        )
+
+    return create_qdrant_client()
 
 
 class QdrantVectorStore:

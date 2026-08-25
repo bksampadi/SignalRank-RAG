@@ -1,12 +1,14 @@
 from pathlib import Path
 
 import logfire
-from qdrant_client import QdrantClient
 
 from signalrank.components.chunking.chunk import DocumentChunk
 from signalrank.components.chunking.chunking import DocumentChunker
 from signalrank.components.embeddings.factory import create_embedding_provider
-from signalrank.components.vector_store.qdrant import QdrantVectorStore
+from signalrank.components.vector_store.qdrant import (
+    QdrantVectorStore,
+    create_configured_qdrant_client,
+)
 from signalrank.config.configuration import ConfigurationManager
 from signalrank.constants import CONFIG_FILE_PATH
 from signalrank.pipelines.data_ingestion_pipeline import (
@@ -83,8 +85,8 @@ class IndexingPipeline:
 
             # 5. Open vector store
 
-            qdrant_client = QdrantClient(
-                path=str(config.qdrant.path),
+            qdrant_client = create_configured_qdrant_client(
+                config.qdrant,
             )
 
             try:

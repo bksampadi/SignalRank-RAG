@@ -1,0 +1,3 @@
+Information retrieval systems rank documents or passages according to how useful they are for a query. Lexical methods such as BM25 rely heavily on term overlap, while dense retrieval represents queries and text as vectors so that semantically related passages can match even when they use different wording.
+
+Hybrid retrieval combines multiple ranking signals. Reciprocal Rank Fusion is one method that assigns each candidate a score based on its rank in several result lists rather than directly combining raw scores from different retrievers. This can improve robustness, but a weak ranking source can still contribute noise if its ranks are treated as meaningful evidence.

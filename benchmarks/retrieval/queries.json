@@ -1,0 +1,272 @@
+[
+  {
+    "id": "weather_lexical",
+    "type": "lexical",
+    "query": "Which station-based instruments provide the observations needed to distinguish changes in temperature, precipitation, and moving air from a forecast of those conditions?",
+    "relevant_docs": [
+      "weather.txt"
+    ],
+    "evidence": "Weather stations monitor local atmospheric conditions"
+  },
+  {
+    "id": "weather_semantic",
+    "type": "semantic",
+    "query": "Before a predictive model can estimate what the atmosphere will do next, how are conditions immediately surrounding a location actually established?",
+    "relevant_docs": [
+      "weather.txt"
+    ],
+    "evidence": "Forecasting is not the same as measurement."
+  },
+  {
+    "id": "ocean_lexical",
+    "type": "lexical",
+    "query": "How can persistent currents transport heat strongly enough for two coastal regions at similar latitudes to experience different climates?",
+    "relevant_docs": [
+      "ocean.txt"
+    ],
+    "evidence": "Ocean currents move large volumes of seawater"
+  },
+  {
+    "id": "ocean_semantic",
+    "type": "semantic",
+    "query": "What planetary-scale circulation mechanism can make a cold region milder even though the energy influencing it originated far away?",
+    "relevant_docs": [
+      "ocean.txt"
+    ],
+    "evidence": "Warm currents can carry heat toward cooler regions"
+  },
+  {
+    "id": "mars_lexical",
+    "type": "lexical",
+    "query": "Why does communication delay force a Mars rover to perform navigation decisions locally instead of relying on continuous commands from mission control?",
+    "relevant_docs": [
+      "mars.txt"
+    ],
+    "evidence": "It therefore uses autonomous navigation"
+  },
+  {
+    "id": "mars_semantic",
+    "type": "semantic",
+    "query": "Why must a machine exploring terrain millions of kilometres from its operators decide whether an obstacle is safe before those operators could respond?",
+    "relevant_docs": [
+      "mars.txt"
+    ],
+    "evidence": "radio signals take time to travel between the planets"
+  },
+  {
+    "id": "volcanoes_lexical",
+    "type": "lexical",
+    "query": "Which observations of seismic activity, gas release, and deformation can indicate that an apparently quiet volcano is changing beneath the surface?",
+    "relevant_docs": [
+      "volcanoes.txt"
+    ],
+    "evidence": "Scientists monitor active volcanoes using seismic activity"
+  },
+  {
+    "id": "volcanoes_semantic",
+    "type": "semantic",
+    "query": "What measurable changes could reveal that pressurised material is migrating upward even when nothing unusual is yet visible at the surface?",
+    "relevant_docs": [
+      "volcanoes.txt"
+    ],
+    "evidence": "swelling of the ground can indicate that magma is moving"
+  },
+  {
+    "id": "batteries_lexical",
+    "type": "lexical",
+    "query": "During repeated charge and discharge cycles, how does lithium-ion transport reverse between the electrodes, and what conditions accelerate degradation?",
+    "relevant_docs": [
+      "batteries.txt"
+    ],
+    "evidence": "During charging, lithium ions move"
+  },
+  {
+    "id": "batteries_semantic",
+    "type": "semantic",
+    "query": "Why might repeatedly replenishing stored electrical energy as quickly as possible shorten the useful life of the device doing the storage?",
+    "relevant_docs": [
+      "batteries.txt"
+    ],
+    "evidence": "Very fast charging or prolonged exposure to high temperatures"
+  },
+  {
+    "id": "solar_lexical",
+    "type": "lexical",
+    "query": "How does a photovoltaic system turn incident solar radiation into electricity, and what additional component can preserve that output for later demand?",
+    "relevant_docs": [
+      "solar.txt"
+    ],
+    "evidence": "Solar photovoltaic panels generate electricity"
+  },
+  {
+    "id": "solar_semantic",
+    "type": "semantic",
+    "query": "How can energy produced when an intermittent source is abundant still be consumed several hours after that source stops contributing?",
+    "relevant_docs": [
+      "solar.txt"
+    ],
+    "evidence": "Energy storage systems such as batteries can help shift electricity"
+  },
+  {
+    "id": "antibiotics_lexical",
+    "type": "lexical",
+    "query": "How can antibiotic exposure both suppress susceptible bacteria and increase the relative advantage of organisms that survive the treatment?",
+    "relevant_docs": [
+      "antibiotics.txt"
+    ],
+    "evidence": "Antibiotics treat bacterial infections"
+  },
+  {
+    "id": "antibiotics_semantic",
+    "type": "semantic",
+    "query": "Why can using a treatment when it is not needed alter a microbial population so that later treatment becomes less effective?",
+    "relevant_docs": [
+      "antibiotics.txt"
+    ],
+    "evidence": "Unnecessary exposure can therefore increase selection pressure."
+  },
+  {
+    "id": "vaccines_lexical",
+    "type": "lexical",
+    "query": "How can vaccination generate immune memory without requiring the person first to experience the full disease caused by the pathogen?",
+    "relevant_docs": [
+      "vaccines.txt"
+    ],
+    "evidence": "Vaccines prepare the immune system"
+  },
+  {
+    "id": "vaccines_semantic",
+    "type": "semantic",
+    "query": "What intervention can make a second encounter with a biological threat behave immunologically unlike the body's first encounter with it?",
+    "relevant_docs": [
+      "vaccines.txt"
+    ],
+    "evidence": "immune cells can develop memory"
+  },
+  {
+    "id": "neural_networks_lexical",
+    "type": "lexical",
+    "query": "How does backpropagation connect prediction error to parameter updates rather than changing every neural-network weight arbitrarily?",
+    "relevant_docs": [
+      "neural_networks.txt"
+    ],
+    "evidence": "Backpropagation computes how changes in parameters affect the loss"
+  },
+  {
+    "id": "neural_networks_semantic",
+    "type": "semantic",
+    "query": "After a model produces the wrong output, what process provides information about which internal numerical relationships contributed to that error and how they should be adjusted?",
+    "relevant_docs": [
+      "neural_networks.txt"
+    ],
+    "evidence": "an optimizer uses that information to update the weights"
+  },
+  {
+    "id": "retrieval_lexical",
+    "type": "lexical",
+    "query": "Why can Reciprocal Rank Fusion improve lexical and dense retrieval when their useful results differ, yet degrade ranking when one source contributes mostly noise?",
+    "relevant_docs": [
+      "retrieval.txt"
+    ],
+    "evidence": "Reciprocal Rank Fusion is one method"
+  },
+  {
+    "id": "retrieval_semantic",
+    "type": "semantic",
+    "query": "Why is adding another ranked list to an ensemble not guaranteed to improve the final ordering, even when the additional system occasionally finds relevant material?",
+    "relevant_docs": [
+      "retrieval.txt"
+    ],
+    "evidence": "a weak ranking source can still contribute noise"
+  },
+  {
+    "id": "dinosaurs_lexical",
+    "type": "lexical",
+    "query": "What geological evidence supports an asteroid impact as the explanation for the disappearance of non-avian dinosaurs while leaving an avian lineage alive?",
+    "relevant_docs": [
+      "dinosaurs.txt"
+    ],
+    "evidence": "Evidence strongly links this event to the impact of a large asteroid"
+  },
+  {
+    "id": "dinosaurs_semantic",
+    "type": "semantic",
+    "query": "Which animals alive today belong inside the evolutionary group whose other major terrestrial branches vanished at the end of the Cretaceous?",
+    "relevant_docs": [
+      "dinosaurs.txt"
+    ],
+    "evidence": "Modern birds are the surviving avian lineage of dinosaurs."
+  },
+  {
+    "id": "aliens_lexical",
+    "type": "lexical",
+    "query": "When searching for technosignatures, why is detecting an unusual extraterrestrial signal insufficient without excluding natural and human explanations?",
+    "relevant_docs": [
+      "aliens.txt"
+    ],
+    "evidence": "searches for technosignatures look for observable evidence"
+  },
+  {
+    "id": "aliens_semantic",
+    "type": "semantic",
+    "query": "Why would a highly structured observation arriving from beyond Earth still fail to establish the existence of another technological society on its own?",
+    "relevant_docs": [
+      "aliens.txt"
+    ],
+    "evidence": "Any candidate signal must be tested against natural explanations"
+  },
+  {
+    "id": "greek_gods_lexical",
+    "type": "lexical",
+    "query": "Which Olympian deity was usually treated as the ruling figure despite Greek myths varying substantially across poets, regions, and cult traditions?",
+    "relevant_docs": [
+      "greek_gods.txt"
+    ],
+    "evidence": "Zeus was commonly portrayed as ruler of the Olympian gods"
+  },
+  {
+    "id": "greek_gods_semantic",
+    "type": "semantic",
+    "query": "Why would two ancient communities tell incompatible stories about what appears to be the same divine figure without either version necessarily being considered a mistake?",
+    "relevant_docs": [
+      "greek_gods.txt"
+    ],
+    "evidence": "Stories differed across regions, poets, cults, and historical periods."
+  },
+  {
+    "id": "pharaohs_lexical",
+    "type": "lexical",
+    "query": "How did Egyptian pharaohs combine political authority with religious responsibilities rather than functioning only as secular monarchs?",
+    "relevant_docs": [
+      "pharaohs.txt"
+    ],
+    "evidence": "Pharaohs were the rulers of ancient Egypt and occupied both political and religious roles."
+  },
+  {
+    "id": "pharaohs_semantic",
+    "type": "semantic",
+    "query": "Why would identifying a monumental triangular tomb as the standard burial place of every ruler across ancient Egyptian history produce a distorted picture?",
+    "relevant_docs": [
+      "pharaohs.txt"
+    ],
+    "evidence": "Pyramids were mainly associated with earlier periods"
+  },
+  {
+    "id": "python_lexical",
+    "type": "lexical",
+    "query": "How can Python remain dynamically typed while type hints still describe expected interfaces to developers and static-analysis tools?",
+    "relevant_docs": [
+      "python.txt"
+    ],
+    "evidence": "It supports multiple programming styles"
+  },
+  {
+    "id": "python_semantic",
+    "type": "semantic",
+    "query": "How can a language postpone deciding the concrete type of a value until execution while still allowing programmers to communicate intended input and output contracts?",
+    "relevant_docs": [
+      "python.txt"
+    ],
+    "evidence": "type hints can document expected interfaces"
+  }
+]

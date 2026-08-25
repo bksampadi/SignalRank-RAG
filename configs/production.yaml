@@ -1,5 +1,5 @@
 data_ingestion:
-  source_path: benchmarks/retrieval/corpus/
+  source_path: benchmarks/retrieval/corpus
   recursive: true
   encoding: utf-8
   supported_extensions:
@@ -27,13 +27,13 @@ retrieval:
   candidate_multiplier: 4
 
 qdrant:
-  mode: local
-  collection_name: signalrank_retrieval_benchmark_v5
-  path: data/qdrant
+  mode: remote
+  collection_name: signalrank_demo
+  path: null
 
 logfire:
   service_name: signalrank-rag
-  environment: local
+  environment: production
   system_metrics: false
 
 finewiki:

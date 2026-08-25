@@ -1,4 +1,6 @@
+import os
 from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import Any
 
 import logfire
@@ -9,6 +11,7 @@ from signalrank.api.schemas import (
     RetrieveResponse,
     SearchResultResponse,
 )
+from signalrank.constants import CONFIG_FILE_PATH
 from signalrank.pipelines.retrieval_pipeline import RetrievalPipeline
 from signalrank.services.retrieval_service import RetrievalService
 
@@ -27,7 +30,16 @@ def logfire_request_attributes(
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    bm25, dense, hybrid = RetrievalPipeline().build()
+    config_filepath = Path(
+        os.getenv(
+            "SIGNALRANK_CONFIG",
+            str(CONFIG_FILE_PATH),
+        )
+    )
+
+    bm25, dense, hybrid = RetrievalPipeline(
+        config_filepath=config_filepath,
+    ).build()
 
     app.state.retrieval_service = RetrievalService(
         retrievers={

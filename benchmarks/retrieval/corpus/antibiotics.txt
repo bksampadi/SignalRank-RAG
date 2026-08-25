@@ -1,0 +1,3 @@
+Antibiotics treat bacterial infections by interfering with processes that bacteria need in order to survive or reproduce. Different drug classes may inhibit cell-wall synthesis, protein production, DNA replication, or other bacterial functions. Antibiotics do not treat viral infections such as influenza.
+
+Resistance emerges when susceptible bacteria are eliminated while resistant variants survive and reproduce. Unnecessary exposure can therefore increase selection pressure. Careful prescribing, appropriate dosing, infection prevention, and surveillance all help slow the spread of resistant organisms.
