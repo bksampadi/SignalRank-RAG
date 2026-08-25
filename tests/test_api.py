@@ -26,7 +26,14 @@ class FakeRetrievalService:
 
 client = TestClient(app)
 
+TEST_SERVICE_TOKEN = "test-service-token"
+
 app.state.retrieval_service = FakeRetrievalService()
+app.state.service_token = TEST_SERVICE_TOKEN
+
+AUTH_HEADERS = {
+    "X-SignalRank-Service-Token": TEST_SERVICE_TOKEN,
+}
 
 
 def test_health_endpoint():
@@ -41,6 +48,7 @@ def test_health_endpoint():
 def test_dense_retrieval_endpoint():
     response = client.post(
         "/retrieve",
+        headers=AUTH_HEADERS,
         json={
             "query": "robotic vehicle exploring the red planet",
             "mode": "dense",
@@ -64,6 +72,7 @@ def test_dense_retrieval_endpoint():
 def test_bm25_retrieval_endpoint():
     response = client.post(
         "/retrieve",
+        headers=AUTH_HEADERS,
         json={
             "query": "Mars rover samples",
             "mode": "bm25",
@@ -82,6 +91,7 @@ def test_bm25_retrieval_endpoint():
 def test_hybrid_retrieval_endpoint():
     response = client.post(
         "/retrieve",
+        headers=AUTH_HEADERS,
         json={
             "query": "Mars rover samples",
             "mode": "hybrid",
@@ -100,6 +110,7 @@ def test_hybrid_retrieval_endpoint():
 def test_invalid_retrieval_mode_is_rejected():
     response = client.post(
         "/retrieve",
+        headers=AUTH_HEADERS,
         json={
             "query": "test query",
             "mode": "gulugulu",
@@ -113,6 +124,7 @@ def test_invalid_retrieval_mode_is_rejected():
 def test_top_k_must_be_positive():
     response = client.post(
         "/retrieve",
+        headers=AUTH_HEADERS,
         json={
             "query": "test query",
             "mode": "dense",
@@ -121,3 +133,102 @@ def test_top_k_must_be_positive():
     )
 
     assert response.status_code == 422
+
+
+def test_retrieve_rejects_missing_service_token():
+    response = client.post(
+        "/retrieve",
+        json={
+            "query": "Mars rover",
+            "mode": "dense",
+            "top_k": 3,
+        },
+    )
+
+    assert response.status_code == 401
+
+
+def test_retrieve_rejects_invalid_service_token():
+    response = client.post(
+        "/retrieve",
+        headers={
+            "X-SignalRank-Service-Token": "wrong-token",
+        },
+        json={
+            "query": "Mars rover",
+            "mode": "dense",
+            "top_k": 3,
+        },
+    )
+
+    assert response.status_code == 401
+
+
+def test_top_k_above_limit_is_rejected():
+    response = client.post(
+        "/retrieve",
+        headers=AUTH_HEADERS,
+        json={
+            "query": "Mars rover",
+            "mode": "dense",
+            "top_k": 11,
+        },
+    )
+
+    assert response.status_code == 422
+
+
+def test_query_above_length_limit_is_rejected():
+    response = client.post(
+        "/retrieve",
+        headers=AUTH_HEADERS,
+        json={
+            "query": "x" * 501,
+            "mode": "dense",
+            "top_k": 3,
+        },
+    )
+
+    assert response.status_code == 422
+
+
+def test_blank_query_is_rejected():
+    response = client.post(
+        "/retrieve",
+        headers=AUTH_HEADERS,
+        json={
+            "query": "  ",
+            "mode": "dense",
+            "top_k": 3,
+        },
+    )
+
+    assert response.status_code == 422
+
+
+def test_top_k_at_limit_is_allowed():
+    response = client.post(
+        "/retrieve",
+        headers=AUTH_HEADERS,
+        json={
+            "query": "Mars rover",
+            "mode": "dense",
+            "top_k": 10,
+        },
+    )
+
+    assert response.status_code == 200
+
+
+def test_query_at_length_limit_is_allowed():
+    response = client.post(
+        "/retrieve",
+        headers=AUTH_HEADERS,
+        json={
+            "query": "x" * 500,
+            "mode": "dense",
+            "top_k": 3,
+        },
+    )
+
+    assert response.status_code == 200

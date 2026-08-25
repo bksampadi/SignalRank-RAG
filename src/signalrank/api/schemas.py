@@ -1,16 +1,33 @@
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class RetrieveRequest(BaseModel):
-    query: str = Field(min_length=1)
+    query: str = Field(
+        min_length=1,
+        max_length=500,
+    )
     mode: Literal[
         "bm25",
         "dense",
         "hybrid",
     ] = "dense"
-    top_k: int = Field(default=10, ge=1, le=50)
+    top_k: int = Field(
+        default=5,
+        ge=1,
+        le=10,
+    )
+
+    @field_validator("query")
+    @classmethod
+    def validate_query(cls, value: str) -> str:
+        value = value.strip()
+
+        if not value:
+            raise ValueError("query must not be blank")
+
+        return value
 
 
 class SearchResultResponse(BaseModel):
