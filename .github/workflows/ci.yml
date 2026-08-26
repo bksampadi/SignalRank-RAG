@@ -155,7 +155,7 @@ jobs:
                   docker run -d \
                     --name signalrank-rag \
                     -p 8000:8000 \
-                    -e LOGFIRE_IGNORE_TO_CONFIG=1 \
+                    -e LOGFIRE_IGNORE_NO_CONFIG=1 \
                     -e SIGNALRANK_SERVICE_TOKEN \
                     -v "${{ github.workspace }}/.ci-data:/app/data" \
                     signalrank-rag:test
@@ -200,4 +200,124 @@ jobs:
             - name: Stop container
               if: always()
               run: docker rm -f signalrank-rag 2>/dev/null || true
+
+    publish:
+        name: Publish container image
+        needs:
+            - quality
+            - typecheck
+            - test
+            - docker
+
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+        runs-on: ubuntu-latest
+
+        permissions:
+            contents: read
+            packages: write
+
+        steps:
+            - name: Check out repository
+              uses: actions/checkout@v7
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v4
+
+            - name: Log in to GHCR
+              uses: docker/login-action@v4
+              with:
+                  registry: ghcr.io
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Build and push image
+              uses: docker/build-push-action@v7
+              with:
+                  context: .
+                  push: true
+                  tags: |
+                      ghcr.io/bksampadi/signalrank-rag:${{ github.sha }}
+                      ghcr.io/bksampadi/signalrank-rag:latest
+                  labels: |
+                      org.opencontainers.image.source=https://github.com/${{ github.repository }}
+                      org.opencontainers.image.revision=${{ github.sha }}
+                  cache-from: type=gha
+                  cache-to: type=gha,mode=max
+
+    deploy:
+        name: Deploy to Azure
+        needs:
+            - publish
+
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+        runs-on: ubuntu-latest
+        timeout-minutes: 15
+
+        permissions:
+            contents: read
+            id-token: write
+
+        steps:
+            - name: Azure login
+              uses: azure/login@v3
+              with:
+                  client-id: ${{ secrets.AZURE_CLIENT_ID }}
+                  tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+                  subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+            - name: Deploy API
+              run: |
+                  az containerapp update \
+                    --name signalrank-api \
+                    --resource-group signalrank-prod-rg \
+                    --image ghcr.io/bksampadi/signalrank-rag:${{ github.sha }}
+
+            - name: Deploy UI
+              run: |
+                  az containerapp update \
+                    --name signalrank-ui \
+                    --resource-group signalrank-prod-rg \
+                    --image ghcr.io/bksampadi/signalrank-rag:${{ github.sha }}
+
+            - name: Verify deployed images
+              run: |
+                  API_IMAGE=$(az containerapp show \
+                    --name signalrank-api \
+                    --resource-group signalrank-prod-rg \
+                    --query "properties.template.containers[0].image" \
+                    --output tsv)
+
+                  UI_IMAGE=$(az containerapp show \
+                    --name signalrank-ui \
+                    --resource-group signalrank-prod-rg \
+                    --query "properties.template.containers[0].image" \
+                    --output tsv)
+
+                  EXPECTED="ghcr.io/bksampadi/signalrank-rag:${{ github.sha }}"
+
+                  echo "Expected: $EXPECTED"
+                  echo "API:      $API_IMAGE"
+                  echo "UI:       $UI_IMAGE"
+
+                  test "$API_IMAGE" = "$EXPECTED"
+                  test "$UI_IMAGE" = "$EXPECTED"
+
+            - name: Verify public UI
+              run: |
+                  for i in {1..30}; do
+                    if curl --fail --silent --show-error \
+                      https://signalrank-ui.icybeach-127c89e3.northeurope.azurecontainerapps.io/ \
+                      > /dev/null; then
+                      echo "SignalRank UI is reachable"
+                      exit 0
+                    fi
+
+                    echo "Waiting for deployed UI..."
+                    sleep 10
+                  done
+
+                  echo "Production UI failed to become reachable"
+                  exit 1
 
