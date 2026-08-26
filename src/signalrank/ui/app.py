@@ -7,15 +7,10 @@ import streamlit as st
 
 SERVICE_TOKEN = os.getenv("SIGNALRANK_SERVICE_TOKEN")
 
-if not SERVICE_TOKEN:
-    raise RuntimeError("SIGNALRANK_SERVICE_TOKEN is not configured.")
-
 API_URL = os.getenv(
     "SIGNALRANK_API_URL",
     "http://127.0.0.1:8000",
 )
-
-SERVICE_TOKEN = os.getenv("SIGNALRANK_SERVICE_TOKEN")
 
 
 @st.cache_resource
@@ -43,6 +38,9 @@ if "last_search" not in st.session_state:
 if "feedback" not in st.session_state:
     st.session_state.feedback = {}
 
+if "query_input" not in st.session_state:
+    st.session_state.query_input = ""
+
 
 st.set_page_config(
     page_title="SignalRank-RAG",
@@ -52,21 +50,66 @@ st.set_page_config(
 
 
 st.title("SignalRank-RAG")
-
 st.caption("Find the evidence that matters.")
-st.caption("Demo corpus: 39 chunks across science, history, computing, and mythology.")
+st.caption(
+    "Demo corpus: 39 benchmark documents across science, space, computing, "
+    "medicine, energy, history, and mythology."
+)
 st.caption(
     "Searches and feedback may be logged for evaluation. "
     "Please don't enter sensitive information."
 )
 
+with st.expander("What's in the demo corpus?"):
+    st.markdown(
+        """
+        **Science & space:** aliens, climate observations, dinosaurs, lunar rovers,
+        Mars, Mars orbiters, oceans, radio astronomy, solar energy, unexplained
+        signals, volcanoes, weather, weather forecasting
+
+        **Biology & medicine:** antibiotics, antiviral resistance, immune escape,
+        vaccines
+
+        **Energy:** batteries, battery management, grid storage
+
+        **Computing & ML:** machine-learning training, neural networks,
+        optimization, Python, retrieval, static typing, type systems
+
+        **History & mythology:** pharaohs, Greek city-states, cults, festivals,
+        gods, heroes, monsters, oracles, poetry, sacrifices, temples, underworld
+        """
+    )
+
 st.write("")
 
+st.markdown("**Try an example**")
+in_corpus_col, out_of_domain_col = st.columns(2)
+
+if in_corpus_col.button(
+    "🦕 In corpus · Dinosaur extinction",
+    width="stretch",
+):
+    st.session_state.query_input = "What caused the extinction of dinosaurs?"
+
+if out_of_domain_col.button(
+    "☕ Out of domain · Making coffee",
+    width="stretch",
+):
+    st.session_state.query_input = "How do I make coffee?"
+
+st.caption(
+    "Dinosaurs are covered by the demo corpus; coffee is intentionally absent. "
+    "Compare what the retrievers return when relevant evidence exists — "
+    "and when it doesn't."
+)
+
+st.write("")
 
 query = st.text_area(
     "What would you like to find?",
-    placeholder=("Ask a question or describe the information you are looking for..."),
+    placeholder="Ask a question or describe the information you are looking for...",
     height=130,
+    key="query_input",
 )
 
 mode = st.segmented_control(
@@ -91,13 +134,14 @@ search = st.button(
 
 
 if search:
+    st.session_state.last_search = None
+
     if not query.strip():
         st.warning("Enter a query first.")
 
     else:
         selected_mode = mode or "Dense"
         search_id = str(uuid.uuid4())
-
         with (
             logfire.span(
                 "retrieval search",
@@ -112,6 +156,7 @@ if search:
             try:
                 if not SERVICE_TOKEN:
                     raise RuntimeError("SIGNALRANK_SERVICE_TOKEN is not configured.")
+
                 response = requests.post(
                     f"{API_URL}/retrieve",
                     headers={
@@ -122,10 +167,23 @@ if search:
                         "mode": selected_mode.lower(),
                         "top_k": top_k,
                     },
-                    timeout=30,
+                    timeout=(5, 120),
                 )
                 response.raise_for_status()
                 data = response.json()
+
+            except requests.Timeout as exc:
+                logfire.error(
+                    "Retrieval service timed out",
+                    error=str(exc),
+                    session_id=st.session_state.session_id,
+                    search_id=search_id,
+                )
+
+                st.error(
+                    "The retrieval service timed out. "
+                    "The first request may take longer while the model starts."
+                )
 
             except requests.RequestException as exc:
                 logfire.error(
@@ -191,7 +249,6 @@ if last_search:
                 relevance = "relevant" if relevant else "not_relevant"
 
                 st.session_state.feedback[feedback_key] = relevance
-
                 logfire.info(
                     "retrieval result feedback",
                     session_id=st.session_state.session_id,
@@ -205,7 +262,6 @@ if last_search:
                     rank=result["rank"],
                     relevance=relevance,
                 )
-
                 st.rerun()
 
             if recorded_feedback:
