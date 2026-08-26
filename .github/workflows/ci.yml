@@ -142,12 +142,21 @@ jobs:
                     signalrank-rag:test \
                     python -c "from signalrank.pipelines.indexing_pipeline import IndexingPipeline; IndexingPipeline().run()"
 
+            - name: Generate smoke-test service token
+              shell: bash
+              run: |
+                  TOKEN="$(openssl rand -hex 32)"
+                  echo "::add-mask::$TOKEN"
+                  echo "SIGNALRANK_SERVICE_TOKEN=$TOKEN" >> "$GITHUB_ENV"
+
+
             - name: Start API container
-              run:  |
+              run: |
                   docker run -d \
                     --name signalrank-rag \
                     -p 8000:8000 \
                     -e LOGFIRE_IGNORE_TO_CONFIG=1 \
+                    -e SIGNALRANK_SERVICE_TOKEN \
                     -v "${{ github.workspace }}/.ci-data:/app/data" \
                     signalrank-rag:test
 
@@ -173,6 +182,7 @@ jobs:
                   curl --fail --silent --show-error \
                     -X POST http://localhost:8000/retrieve \
                     -H "Content-Type: application/json" \
+                    -H "X-SignalRank-Service-Token: ${SIGNALRANK_SERVICE_TOKEN}" \
                     -d '{"query":"Mars rover","mode":"bm25","top_k":2}'
 
             - name: Test dense retrieval
@@ -180,6 +190,7 @@ jobs:
                   curl --fail --silent --show-error \
                     -X POST http://localhost:8000/retrieve \
                     -H "Content-Type: application/json" \
+                    -H "X-SignalRank-Service-Token: ${SIGNALRANK_SERVICE_TOKEN}" \
                     -d '{"query":"Mars rover","mode":"dense","top_k":2}'
 
             - name: Show container logs on failure

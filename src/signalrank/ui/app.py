@@ -5,10 +5,17 @@ import logfire
 import requests
 import streamlit as st
 
+SERVICE_TOKEN = os.getenv("SIGNALRANK_SERVICE_TOKEN")
+
+if not SERVICE_TOKEN:
+    raise RuntimeError("SIGNALRANK_SERVICE_TOKEN is not configured.")
+
 API_URL = os.getenv(
     "SIGNALRANK_API_URL",
     "http://127.0.0.1:8000",
 )
+
+SERVICE_TOKEN = os.getenv("SIGNALRANK_SERVICE_TOKEN")
 
 
 @st.cache_resource
@@ -103,8 +110,13 @@ if search:
             st.spinner("Searching the corpus..."),
         ):
             try:
+                if not SERVICE_TOKEN:
+                    raise RuntimeError("SIGNALRANK_SERVICE_TOKEN is not configured.")
                 response = requests.post(
                     f"{API_URL}/retrieve",
+                    headers={
+                        "X-SignalRank-Service-Token": SERVICE_TOKEN,
+                    },
                     json={
                         "query": query,
                         "mode": selected_mode.lower(),

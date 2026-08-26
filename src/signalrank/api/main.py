@@ -1,10 +1,11 @@
+import hmac
 import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
 
 import logfire
-from fastapi import FastAPI, Request, WebSocket
+from fastapi import FastAPI, Header, HTTPException, Request, WebSocket, status
 
 from signalrank.api.schemas import (
     RetrieveRequest,
@@ -16,8 +17,20 @@ from signalrank.pipelines.retrieval_pipeline import RetrievalPipeline
 from signalrank.services.retrieval_service import RetrievalService
 
 
+def verify_service_token(
+    token: str | None,
+    expected: str,
+) -> None:
+
+    if token is None or not hmac.compare_digest(token, expected):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Unauthorized",
+        )
+
+
 def logfire_request_attributes(
-    request: Request | WebSocket,
+    _request: Request | WebSocket,
     attributes: dict[str, Any],
 ) -> dict[str, Any] | None:
     if attributes["errors"]:
@@ -36,6 +49,13 @@ async def lifespan(app: FastAPI):
             str(CONFIG_FILE_PATH),
         )
     )
+
+    service_token = os.getenv("SIGNALRANK_SERVICE_TOKEN")
+
+    if not service_token:
+        raise RuntimeError("SIGNALRANK_SERVICE_TOKEN is required.")
+
+    app.state.service_token = service_token
 
     bm25, dense, hybrid = RetrievalPipeline(
         config_filepath=config_filepath,
@@ -73,7 +93,16 @@ def health() -> dict[str, str]:
 def retrieve(
     payload: RetrieveRequest,
     request: Request,
+    service_token: str | None = Header(
+        default=None,
+        alias="X-SignalRank-Service-Token",
+    ),
 ) -> RetrieveResponse:
+    verify_service_token(
+        service_token,
+        request.app.state.service_token,
+    )
+
     service: RetrievalService = request.app.state.retrieval_service
 
     with logfire.span(
