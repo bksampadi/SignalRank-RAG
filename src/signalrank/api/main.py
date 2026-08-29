@@ -51,6 +51,27 @@ def logfire_request_attributes(
     return {}
 
 
+def get_agent_graph(request: Request):
+    graph = request.app.state.agent_graph
+
+    if graph is None:
+        config = request.app.state.config
+
+        llm = ChatGoogleGenerativeAI(
+            model=config.llm.model_name,
+            max_retries=config.llm.max_retries,
+        )
+
+        graph = build_agent_graph(
+            search_service=request.app.state.search_service,
+            llm=llm,
+        )
+
+        request.app.state.agent_graph = graph
+
+    return graph
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     config_filepath = Path(
@@ -68,6 +89,7 @@ async def lifespan(app: FastAPI):
     app.state.service_token = service_token
 
     config = ConfigurationManager(config_filepath).load()
+    app.state.config = config
 
     if config.qdrant.recreate_collection:
         IndexingPipeline(
@@ -103,16 +125,7 @@ async def lifespan(app: FastAPI):
     )
 
     app.state.search_service = search_service
-
-    llm = ChatGoogleGenerativeAI(
-        model=config.llm.model_name,
-        max_retries=config.llm.max_retries,
-    )
-
-    app.state.agent_graph = build_agent_graph(
-        search_service=search_service,
-        llm=llm,
-    )
+    app.state.agent_graph = None
 
     yield
 
@@ -196,7 +209,7 @@ def chat(
         request.app.state.service_token,
     )
 
-    graph = request.app.state.agent_graph
+    graph = get_agent_graph(request)
 
     with logfire.span(
         "agent query",
