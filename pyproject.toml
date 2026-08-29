@@ -13,10 +13,8 @@ dependencies = [
     # Configuration
     "PyYAML>=6.0,<7",
     "python-box>=7.4,<8",
-
     # Observability
     "logfire[fastapi,requests]>=4.40,<5",
-
     # Data ingestion
     "pymupdf",
     "beautifulsoup4>=4.15.0",
@@ -26,24 +24,24 @@ dependencies = [
     "defusedxml>=0.7.1",
     "unstructured[docx,pptx,xlsx]>=0.22.18",
     "datasets>=5.0.1",
-
     # Retrieval
     "bm25s>=0.3.10,<0.4",
     "sentence-transformers>=5.7,<6",
     "torch",
-
     # Vector store
     "qdrant-client>=1.19,<2",
-
     # Cloud embeddings
     "langchain-google-genai>=4.3.4",
     "google-generativeai>=0.8.6",
-
+    # Agents / orchestration
+    "langgraph>=1.2,<2",
+    "langchain-core>=1.6,<2",
     # API / UI
     "fastapi>=0.141,<1",
     "uvicorn[standard]>=0.52,<1",
     "streamlit>=1.61.1",
     "requests>=2.34.2",
+    "flashrank>=0.2.10,<0.3",
 ]
 
 
