@@ -1,18 +1,18 @@
 from signalrank.components.chunking.chunking import DocumentChunker
 from signalrank.config.configuration import ConfigurationManager
-from signalrank.constants import CONFIG_FILE_PATH
+from signalrank.constants import BENCHMARK_CONFIG_FILE_PATH
 from signalrank.pipelines.data_ingestion_pipeline import DataIngestionPipeline
 
 
 def test_chunk_ids_are_deterministic() -> None:
-    config = ConfigurationManager(CONFIG_FILE_PATH).load()
+    config = ConfigurationManager(BENCHMARK_CONFIG_FILE_PATH).load()
 
     documents_1 = DataIngestionPipeline(
-        config_filepath=CONFIG_FILE_PATH,
+        config_filepath=BENCHMARK_CONFIG_FILE_PATH,
     ).run()
 
     documents_2 = DataIngestionPipeline(
-        config_filepath=CONFIG_FILE_PATH,
+        config_filepath=BENCHMARK_CONFIG_FILE_PATH,
     ).run()
 
     chunker = DocumentChunker(

@@ -6,14 +6,14 @@ from signalrank.components.vector_store.qdrant import (
     create_configured_qdrant_client,
 )
 from signalrank.config.configuration import ConfigurationManager
-from signalrank.constants import CONFIG_FILE_PATH
+from signalrank.constants import BENCHMARK_CONFIG_FILE_PATH
 from signalrank.pipelines.indexing_pipeline import IndexingPipeline
 
 
 def test_qdrant_index_matches_current_chunks(
     tmp_path: Path,
 ) -> None:
-    with CONFIG_FILE_PATH.open(
+    with BENCHMARK_CONFIG_FILE_PATH.open(
         encoding="utf-8",
     ) as file:
         config_data = yaml.safe_load(file)
