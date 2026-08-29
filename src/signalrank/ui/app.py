@@ -158,7 +158,7 @@ if search:
                     raise RuntimeError("SIGNALRANK_SERVICE_TOKEN is not configured.")
 
                 response = requests.post(
-                    f"{API_URL}/retrieve",
+                    f"{API_URL}/chat",
                     headers={
                         "X-SignalRank-Service-Token": SERVICE_TOKEN,
                     },
@@ -201,6 +201,8 @@ if search:
                     "query": query,
                     "mode": selected_mode.lower(),
                     "top_k": top_k,
+                    "route": data["route"],
+                    "answer": data["answer"],
                     "results": data["results"],
                 }
 
@@ -210,62 +212,66 @@ last_search = st.session_state.last_search
 if last_search:
     results = last_search["results"]
 
-    st.write("")
-    st.subheader(f"{len(results)} results")
+    st.subheader("Answer")
+    st.write(last_search["Answer"])
 
-    for result in results:
-        with st.container(border=True):
-            header, score = st.columns([4, 1])
+    if results:
+        with st.expander(f"View retrieved evidence ({len(results)})"):
+            for result in results:
+                with st.container(border=True):
+                    header, score = st.columns([4, 1])
 
-            with header:
-                st.markdown(f"**Result {result['rank']}**")
+                    with header:
+                        st.markdown(f"**Result {result['rank']}**")
 
-            with score:
-                st.markdown(f"{result['score']:.3f}")
+                    with score:
+                        st.markdown(f"{result['score']:.3f}")
 
-            st.write(result["text"])
-            st.caption(result["source_path"])
+                    st.write(result["text"])
+                    st.caption(result["source_path"])
 
-            feedback_key = f"{last_search['search_id']}:{result['chunk_id']}"
-            recorded_feedback = st.session_state.feedback.get(feedback_key)
+                    feedback_key = f"{last_search['search_id']}:{result['chunk_id']}"
+                    recorded_feedback = st.session_state.feedback.get(feedback_key)
 
-            relevant_col, not_relevant_col = st.columns(2)
+                    relevant_col, not_relevant_col = st.columns(2)
 
-            relevant = relevant_col.button(
-                "👍 Relevant",
-                key=f"relevant-{feedback_key}",
-                width="stretch",
-                disabled=recorded_feedback is not None,
-            )
+                    relevant = relevant_col.button(
+                        "👍 Relevant",
+                        key=f"relevant-{feedback_key}",
+                        width="stretch",
+                        disabled=recorded_feedback is not None,
+                    )
 
-            not_relevant = not_relevant_col.button(
-                "👎 Not relevant",
-                key=f"not-relevant-{feedback_key}",
-                width="stretch",
-                disabled=recorded_feedback is not None,
-            )
+                    not_relevant = not_relevant_col.button(
+                        "👎 Not relevant",
+                        key=f"not-relevant-{feedback_key}",
+                        width="stretch",
+                        disabled=recorded_feedback is not None,
+                    )
 
-            if relevant or not_relevant:
-                relevance = "relevant" if relevant else "not_relevant"
+                    if relevant or not_relevant:
+                        relevance = "relevant" if relevant else "not_relevant"
 
-                st.session_state.feedback[feedback_key] = relevance
-                logfire.info(
-                    "retrieval result feedback",
-                    session_id=st.session_state.session_id,
-                    search_id=last_search["search_id"],
-                    query=last_search["query"],
-                    query_length=len(last_search["query"]),
-                    retrieval_mode=last_search["mode"],
-                    chunk_id=result["chunk_id"],
-                    doc_id=result["doc_id"],
-                    source_path=result["source_path"],
-                    rank=result["rank"],
-                    relevance=relevance,
-                )
-                st.rerun()
+                        st.session_state.feedback[feedback_key] = relevance
+                        logfire.info(
+                            "retrieval result feedback",
+                            session_id=st.session_state.session_id,
+                            search_id=last_search["search_id"],
+                            query=last_search["query"],
+                            query_length=len(last_search["query"]),
+                            retrieval_mode=last_search["mode"],
+                            chunk_id=result["chunk_id"],
+                            doc_id=result["doc_id"],
+                            source_path=result["source_path"],
+                            rank=result["rank"],
+                            relevance=relevance,
+                        )
+                        st.rerun()
 
-            if recorded_feedback:
-                label = (
-                    "Relevant" if recorded_feedback == "relevant" else "Not relevant"
-                )
-                st.caption(f"Feedback recorded: {label}")
+                    if recorded_feedback:
+                        label = (
+                            "Relevant"
+                            if recorded_feedback == "relevant"
+                            else "Not relevant"
+                        )
+                        st.caption(f"Feedback recorded: {label}")

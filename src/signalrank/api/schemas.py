@@ -44,3 +44,17 @@ class RetrieveResponse(BaseModel):
     query: str
     mode: str
     results: list[SearchResultResponse]
+
+
+class ChatRequest(RetrieveRequest):
+    pass
+
+
+class ChatResponse(BaseModel):
+    query: str
+    route: Literal[
+        "conversation",
+        "retrieval",
+    ]
+    answer: str
+    results: list[SearchResultResponse]

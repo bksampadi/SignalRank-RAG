@@ -4,22 +4,22 @@ from signalrank.api.main import app
 from signalrank.components.retrieval.result import SearchResult
 
 
-class FakeRetrievalService:
-    def retrieve(
+class FakeSearchService:
+    def search(
         self,
         query: str,
-        mode: str,
+        retrieval_mode: str,
         top_k: int = 10,
     ) -> list[SearchResult]:
         return [
             SearchResult(
-                chunk_id=f"{mode}_chunk",
+                chunk_id=f"{retrieval_mode}_chunk",
                 doc_id="doc_test",
                 text=f"Result for {query}",
                 score=0.95,
                 rank=1,
                 source_path="test.txt",
-                metadata={"mode": mode},
+                metadata={"mode": retrieval_mode},
             )
         ]
 
@@ -28,7 +28,7 @@ client = TestClient(app)
 
 TEST_SERVICE_TOKEN = "test-service-token"
 
-app.state.retrieval_service = FakeRetrievalService()
+app.state.search_service = FakeSearchService()
 app.state.service_token = TEST_SERVICE_TOKEN
 
 AUTH_HEADERS = {
