@@ -39,6 +39,12 @@ class DenseRetriever:
         ):
             chunk = self._chunks[chunk_id]
 
+            if chunk is None:
+                raise RuntimeError(
+                    f"Vector store returned unknown chunk ID: {chunk_id}. "
+                    "The Qdrant collection may be stale and require reindexing."
+                )
+
             search_results.append(
                 SearchResult(
                     chunk_id=chunk.chunk_id,

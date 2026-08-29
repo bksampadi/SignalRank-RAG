@@ -52,6 +52,8 @@ def test_hybrid_retriever_combines_ranking():
     retriever = HybridRetriever(
         bm25_retriever=bm25,
         dense_retriever=dense,
+        rrf_k=60,
+        candidate_multiplier=4,
     )
 
     results = retriever.retrieve(

@@ -76,7 +76,11 @@ class QdrantVectorStore:
             collection=collection_name,
             dimension=dimension,
         ):
-            if not self._client.collection_exists(collection_name):
+            collection_exists = self._client.collection_exists(
+                collection_name,
+            )
+
+            if not collection_exists:
                 self._client.create_collection(
                     collection_name=collection_name,
                     vectors_config=models.VectorParams(

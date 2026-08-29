@@ -31,8 +31,6 @@ class IndexingPipeline:
 
     def run(
         self,
-        *,
-        recreate: bool = False,
     ) -> list[DocumentChunk]:
         config = ConfigurationManager(self._config_filepath).load()
 
@@ -84,19 +82,25 @@ class IndexingPipeline:
             )
 
             # 5. Open vector store
+            import shutil
+
+            if (
+                config.qdrant.mode == "local"
+                and config.qdrant.recreate_collection
+                and config.qdrant.path is not None
+                and config.qdrant.path.exists()
+            ):
+                shutil.rmtree(config.qdrant.path)
+
+                logfire.info(
+                    "Local Qdrant storage deleted", path=str(config.qdrant.path)
+                )
 
             qdrant_client = create_configured_qdrant_client(
                 config.qdrant,
             )
 
             try:
-                if recreate and qdrant_client.collection_exists(
-                    config.qdrant.collection_name
-                ):
-                    qdrant_client.delete_collection(
-                        collection_name=config.qdrant.collection_name,
-                    )
-
                 vector_store = QdrantVectorStore(
                     dimension=embedding_provider.dimension,
                     collection_name=config.qdrant.collection_name,

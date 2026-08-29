@@ -44,7 +44,9 @@ def test_real_dense_retrieval_returns_semantic_match():
         ),
     ]
 
-    embedding_provider = SentenceTransformerEmbedding()
+    embedding_provider = SentenceTransformerEmbedding(
+        model_name="sentence-transformers/all-mpnet-base-v2",
+    )
 
     vectors = embedding_provider.embed_documents([chunk.text for chunk in chunks])
 

@@ -14,8 +14,8 @@ class HybridRetriever:
         bm25_retriever: Retriever,
         dense_retriever: Retriever,
         *,
-        rrf_k: int = 60,
-        candidate_multiplier: int = 4,
+        rrf_k: int,
+        candidate_multiplier: int,
     ):
         if rrf_k <= 0:
             raise ValueError("rrf_k must be greater than zero")
