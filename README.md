@@ -284,6 +284,8 @@ scripts\run_demo.cmd
 ```
 
 ---
+<details>
+<summary><strong>Development and configuration</strong></summary>
 
 ## Development
 
@@ -340,18 +342,15 @@ LOGFIRE_TOKEN
 SIGNALRANK_API_URL
 SIGNALRANK_SERVICE_TOKEN
 ```
+</details>
 
 ---
 
-## Relevance Feedback
+## Evaluation & Observability
 
 The live Streamlit retrieval UI lets users mark individual results as **Relevant** or **Not relevant**.
 
 Feedback is collected as retrieval-evaluation data rather than used to mutate rankings online. Each judgement can be associated with search/session context and result metadata, providing labelled evidence for retrieval diagnostics, relevance calibration, fusion experiments, and reranker evaluation.
-
----
-
-## Observability
 
 SignalRank-RAG uses Logfire for distributed tracing across the API, retrieval, embedding, ranking, agentic routing, vector-store operations, and relevance-feedback events.
 
@@ -389,6 +388,9 @@ Runtime endpoints and secrets are injected through deployment configuration rath
 
 ---
 
+<details>
+<summary><strong>Project structure</strong></summary>
+
 ## Project Structure
 
 ```text
@@ -420,6 +422,7 @@ SignalRank-RAG/
 ├── pyproject.toml
 └── uv.lock
 ```
+</details>
 
 ---
 
