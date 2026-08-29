@@ -26,6 +26,13 @@ retrieval:
   rrf_k: 60
   candidate_multiplier: 4
 
+ranking:
+  enabled: true
+  provider: flashrank
+  model_name: ms-marco-MiniLM-L-12-v2
+  max_length: 512
+  candidate_multiplier: 4
+
 qdrant:
   mode: local
   collection_name: signalrank_retrieval_benchmark_v5

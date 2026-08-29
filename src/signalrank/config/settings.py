@@ -87,6 +87,33 @@ class RetrievalConfig:
             raise ValueError("candidate_multiplier must be greater than zero")
 
 
+RankingProvider = Literal["flashrank",]
+
+
+@dataclass(frozen=True)
+class RankingConfig:
+    """Configuration for second-stage ranking."""
+
+    enabled: bool = True
+    provider: RankingProvider = "flashrank"
+    model_name: str = "ms-marco-MiniLM-L-12-v2"
+    max_length: int = 512
+    candidate_multiplier: int = 4
+
+    def __post_init__(self) -> None:
+        if not self.provider.strip():
+            raise ValueError("provider cannot be empty")
+
+        if not self.model_name.strip():
+            raise ValueError("model_name cannot be empty")
+
+        if self.max_length <= 0:
+            raise ValueError("max_length must be greater than zero")
+
+        if self.candidate_multiplier <= 0:
+            raise ValueError("candidate_multiplier must be greater than zero")
+
+
 QdrantMode = Literal[
     "memory",
     "local",
