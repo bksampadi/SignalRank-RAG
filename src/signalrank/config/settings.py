@@ -127,6 +127,7 @@ class QdrantConfig:
 
     mode: QdrantMode = "memory"
     collection_name: str = "signalrank_finewiki"
+    recreate_collection: bool = False
     path: Path | None = Path("data/qdrant")
 
     def __post_init__(self) -> None:
@@ -142,6 +143,21 @@ class QdrantConfig:
 
         if self.mode == "local" and self.path is None:
             raise ValueError("path is required when Qdrant mode is 'local'")
+
+
+@dataclass(frozen=True)
+class LLMConfig:
+    """Configuration for the generative language model."""
+
+    model_name: str = "gemini-3.5-flash"
+    max_retries: int = 2
+
+    def __post_init__(self) -> None:
+        if not self.model_name.strip():
+            raise ValueError("model_name cannot be empty")
+
+        if self.max_retries < 0:
+            raise ValueError("max_retries cannot be negative")
 
 
 @dataclass(frozen=True)
@@ -174,6 +190,8 @@ class AppConfig:
     chunking: ChunkingConfig
     embedding: EmbeddingConfig
     retrieval: RetrievalConfig
+    ranking: RankingConfig
     qdrant: QdrantConfig
+    llm: LLMConfig
     logfire: LogfireConfig
     finewiki: FineWikiConfig

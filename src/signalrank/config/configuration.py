@@ -4,8 +4,10 @@ from signalrank.config.settings import (
     DataIngestionConfig,
     EmbeddingConfig,
     FineWikiConfig,
+    LLMConfig,
     LogfireConfig,
     QdrantConfig,
+    RankingConfig,
     RetrievalConfig,
 )
 from signalrank.constants import CONFIG_FILE_PATH
@@ -27,7 +29,9 @@ class ConfigurationManager:
             chunking=ChunkingConfig(**self.config.chunking),
             embedding=EmbeddingConfig(**self.config.embedding),
             retrieval=RetrievalConfig(**self.config.retrieval),
+            ranking=RankingConfig(**self.config.ranking),
             qdrant=QdrantConfig(**self.config.qdrant),
+            llm=LLMConfig(**self.config.get("llm", {})),
             logfire=LogfireConfig(**self.config.logfire),
             finewiki=FineWikiConfig(**self.config.finewiki),
         )
