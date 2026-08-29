@@ -119,7 +119,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="SignalRank-RAG",
-    version="0.1.0",
+    version="0.2.0",
     lifespan=lifespan,
 )
 
@@ -215,13 +215,6 @@ def chat(
                 "retrieval_mode": payload.mode,
                 "top_k": payload.top_k,
             }
-        )
-
-        print("FINAL GRAPH STATE:", state)
-        print("FINAL GRAPH KEYS:", state.keys())
-        print(
-            "FINAL ANSWER VALUE:",
-            repr(state.get("final_answer")),
         )
 
         route = state.get("route")
