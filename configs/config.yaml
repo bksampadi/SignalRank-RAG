@@ -36,7 +36,8 @@ ranking:
 qdrant:
   mode: local
   collection_name: signalrank_finewiki
-  path: data/qdrant
+  recreate_collection: true
+  path: data/qdrant/dev
 
 logfire:
   service_name: signalrank-rag
