@@ -157,6 +157,7 @@ jobs:
                     -p 8000:8000 \
                     -e LOGFIRE_IGNORE_NO_CONFIG=1 \
                     -e SIGNALRANK_SERVICE_TOKEN \
+                    -e OPENROUTER_API_KEY=ci-placeholder \
                     -v "${{ github.workspace }}/.ci-data:/app/data" \
                     signalrank-rag:test
 
