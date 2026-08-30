@@ -7,7 +7,7 @@ from typing import Any
 import logfire
 from fastapi import FastAPI, Header, HTTPException, Request, WebSocket, status
 from langchain_core.messages import HumanMessage
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_openrouter import ChatOpenRouter
 
 from signalrank.agents.graph import build_agent_graph
 from signalrank.api.schemas import (
@@ -57,9 +57,19 @@ def get_agent_graph(request: Request):
     if graph is None:
         config = request.app.state.config
 
-        llm = ChatGoogleGenerativeAI(
-            model=config.llm.model_name,
+        openrouter_api_key = os.getenv("OPENROUTER_API_KEY")
+        openrouter_model = os.getenv("OPENROUTER_MODEL")
+
+        if not openrouter_api_key:
+            raise RuntimeError("OPENROUTER_API_KEY is required.")
+
+        if not openrouter_model:
+            raise RuntimeError("OPENROUTER_MODEL is required.")
+        
+        llm = ChatOpenRouter(
+            model=openrouter_model,
             max_retries=config.llm.max_retries,
+            temperature=0,
         )
 
         graph = build_agent_graph(
