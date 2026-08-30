@@ -57,17 +57,8 @@ def get_agent_graph(request: Request):
     if graph is None:
         config = request.app.state.config
 
-        openrouter_api_key = os.getenv("OPENROUTER_API_KEY")
-        openrouter_model = os.getenv("OPENROUTER_MODEL")
-
-        if not openrouter_api_key:
-            raise RuntimeError("OPENROUTER_API_KEY is required.")
-
-        if not openrouter_model:
-            raise RuntimeError("OPENROUTER_MODEL is required.")
-
         llm = ChatOpenRouter(
-            model=openrouter_model,
+            model=config.llm.model_name,
             max_retries=config.llm.max_retries,
             temperature=0,
         )
@@ -95,6 +86,11 @@ async def lifespan(app: FastAPI):
 
     if not service_token:
         raise RuntimeError("SIGNALRANK_SERVICE_TOKEN is required.")
+
+    openrouter_api_key = os.getenv("OPENROUTER_API_KEY")
+
+    if not openrouter_api_key:
+        raise RuntimeError("OPENROUTER_API_KEY is required.")
 
     app.state.service_token = service_token
 

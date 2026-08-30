@@ -40,7 +40,7 @@ qdrant:
   path: null
 
 llm:
-  model_name: gemini-3.5-flash
+  model_name: openrouter/free
   max_retries: 2
 
 logfire:

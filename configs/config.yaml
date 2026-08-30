@@ -39,6 +39,10 @@ qdrant:
   recreate_collection: true
   path: data/qdrant/dev
 
+llm:
+  model_name: openrouter/free
+  max_retries: 2
+
 logfire:
   service_name: signalrank-rag
   environment: local
