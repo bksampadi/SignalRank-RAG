@@ -13,6 +13,18 @@ from signalrank.prompts.rag_prompts import (
     RAG_SYSTEM_PROMPT,
 )
 
+# Conservative initial abstention threshold.
+# Calibrate against benchmark score distributions before treating as final.
+MIN_EVIDENCE_SCORE = 1e-4
+
+def _has_sufficient_evidence(
+    results: list[SearchResult],
+) -> bool:
+    if not results:
+        return False
+
+    return max(result.score for result in results) >= MIN_EVIDENCE_SCORE
+
 
 def _format_context(
     results: list[SearchResult],
@@ -65,11 +77,12 @@ def make_responder_node(
                 [],
             )
 
-            if not results:
+            if not _has_sufficient_evidence(results):
                 response = AIMessage(
                     content=(
-                        "I couldn't find enough evidence in the indexed "
-                        "corpus to answer that question."
+                        "I couldn't find reliable evidence for that in the demo corpus. "
+                        "I can help with topics such as dinosaurs, Mars, vaccines, "
+                        "batteries, Python, retrieval, and mythology."
                     )
                 )
 
