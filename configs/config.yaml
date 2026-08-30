@@ -42,6 +42,7 @@ qdrant:
 llm:
   model_name: openrouter/free
   max_retries: 2
+  max_output_tokens: 512
 
 logfire:
   service_name: signalrank-rag
