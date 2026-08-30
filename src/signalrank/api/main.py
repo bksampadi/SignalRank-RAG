@@ -241,14 +241,10 @@ def chat(
         answer = state.get("final_answer")
 
         if route is None:
-            raise RuntimeError(
-                "Agent graph completed without setting route."
-            )
+            raise RuntimeError("Agent graph completed without setting route.")
 
         if answer is None:
-            raise RuntimeError(
-                "Agent graph completed without setting final_answer."
-            )
+            raise RuntimeError("Agent graph completed without setting final_answer.")
 
     results = state.get(
         "search_results",
