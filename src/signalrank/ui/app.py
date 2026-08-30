@@ -235,6 +235,11 @@ def get_greeting_response(
     return GREETING_RESPONSES.get(query.strip().lower())
 
 
+def format_source_count(count: int) -> str:
+    noun = "source" if count == 1 else "sources"
+    return f"{count} {noun}"
+
+
 def wait_for_backend(
     warmup_notice,
     attempts: int = 30,
@@ -424,20 +429,18 @@ def render_feedback(
 
     recorded_feedback = st.session_state.feedback.get(feedback_key)
 
-    relevant_col, not_relevant_col, _ = st.columns([1.1, 1.35, 3])
+    relevant_col, not_relevant_col, _ = st.columns([1, 1.2, 4])
 
     relevant = relevant_col.button(
         "👍 Relevant",
         key=f"relevant-{feedback_key}",
         disabled=recorded_feedback is not None,
-        width="stretch",
     )
 
     not_relevant = not_relevant_col.button(
         "👎 Not relevant",
         key=f"not-relevant-{feedback_key}",
         disabled=recorded_feedback is not None,
-        width="stretch",
     )
 
     if relevant or not_relevant:
@@ -536,7 +539,7 @@ def render_turn(turn: dict) -> None:
             st.markdown(
                 f'<div class="signalrank-meta">'
                 f"{mode_label} · "
-                f"{len(results)} sources"
+                f"{format_source_count(len(results))}"
                 f"</div>",
                 unsafe_allow_html=True,
             )
@@ -552,12 +555,7 @@ def render_turn(turn: dict) -> None:
 
 
 def render_retrieval_controls() -> None:
-    control_col, status_col = st.columns(
-        [1.4, 4.6],
-        vertical_alignment="center",
-    )
-
-    with control_col, st.popover("⚙ Retrieval"):
+    with st.popover("⚙ Retrieval"):
         st.segmented_control(
             "Mode",
             options=[
@@ -572,17 +570,6 @@ def render_retrieval_controls() -> None:
             "Sources",
             options=[1, 3, 5, 7, 10],
             key="top_k",
-        )
-
-    with status_col:
-        mode = st.session_state.retrieval_mode or "Dense"
-
-        st.markdown(
-            f'<div class="retrieval-status">'
-            f"{mode} · "
-            f"{st.session_state.top_k} sources"
-            f"</div>",
-            unsafe_allow_html=True,
         )
 
 
