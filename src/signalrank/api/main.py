@@ -65,7 +65,7 @@ def get_agent_graph(request: Request):
 
         if not openrouter_model:
             raise RuntimeError("OPENROUTER_MODEL is required.")
-        
+
         llm = ChatOpenRouter(
             model=openrouter_model,
             max_retries=config.llm.max_retries,

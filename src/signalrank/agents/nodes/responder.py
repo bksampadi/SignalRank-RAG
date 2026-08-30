@@ -17,6 +17,7 @@ from signalrank.prompts.rag_prompts import (
 # Calibrate against benchmark score distributions before treating as final.
 MIN_EVIDENCE_SCORE = 1e-4
 
+
 def _has_sufficient_evidence(
     results: list[SearchResult],
 ) -> bool:

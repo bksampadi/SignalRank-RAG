@@ -240,9 +240,8 @@ GREETING_RESPONSES = {
 def get_greeting_response(
     query: str,
 ) -> str | None:
-    return GREETING_RESPONSES.get(
-        query.strip().lower()
-    )
+    return GREETING_RESPONSES.get(query.strip().lower())
+
 
 def wait_for_backend(
     warmup_notice,
@@ -263,9 +262,7 @@ def wait_for_backend(
         except requests.RequestException:
             pass
 
-        message = WARMUP_MESSAGES[
-            attempt % len(WARMUP_MESSAGES)
-        ]
+        message = WARMUP_MESSAGES[attempt % len(WARMUP_MESSAGES)]
 
         warmup_notice.caption(message)
         time.sleep(delay_seconds)
@@ -273,11 +270,13 @@ def wait_for_backend(
     warmup_notice.empty()
     return False
 
+
 def format_score(score: float) -> str:
     if 0 < score < 0.001:
         return f"{score:.1e}"
 
     return f"{score:.3f}"
+
 
 def post_chat(
     query: str,
@@ -297,6 +296,7 @@ def post_chat(
         },
         timeout=(5, 120),
     )
+
 
 def request_chat(
     query: str,
@@ -325,9 +325,7 @@ def request_chat(
             service_token = SERVICE_TOKEN
 
             if not service_token:
-                raise RuntimeError(
-                    "SIGNALRANK_SERVICE_TOKEN is not configured."
-                )
+                raise RuntimeError("SIGNALRANK_SERVICE_TOKEN is not configured.")
 
             response = requests.post(
                 f"{API_URL}/chat",
@@ -763,10 +761,7 @@ if submitted_query:
     query = submitted_query.strip()
 
     if query:
-        selected_mode = (
-            st.session_state.retrieval_mode
-            or "Dense"
-        )
+        selected_mode = st.session_state.retrieval_mode or "Dense"
         selected_top_k = st.session_state.top_k
 
         # Show the user message immediately.
