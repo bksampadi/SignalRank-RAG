@@ -88,14 +88,6 @@ footer {
     font-weight: 760;
 }
 
-.signalrank-empty p {
-    max-width: 560px;
-    margin: 1rem auto 0;
-    font-size: 1.05rem;
-    line-height: 1.6;
-    opacity: 0.58;
-}
-
 /* Quiet technical metadata */
 .signalrank-meta {
     font-size: 0.78rem;
@@ -276,26 +268,6 @@ def format_score(score: float) -> str:
         return f"{score:.1e}"
 
     return f"{score:.3f}"
-
-
-def post_chat(
-    query: str,
-    mode: str,
-    top_k: int,
-    service_token: str,
-) -> requests.Response:
-    return requests.post(
-        f"{API_URL}/chat",
-        headers={
-            "X-SignalRank-Service-Token": service_token,
-        },
-        json={
-            "query": query,
-            "mode": mode.lower(),
-            "top_k": top_k,
-        },
-        timeout=(5, 120),
-    )
 
 
 def request_chat(
@@ -560,18 +532,16 @@ def render_turn(turn: dict) -> None:
 
         if results:
             mode_label = turn["mode"].title()
-            elapsed = turn["elapsed_seconds"]
 
             st.markdown(
                 f'<div class="signalrank-meta">'
                 f"{mode_label} · "
-                f"{len(results)} sources · "
-                f"{elapsed:.2f}s"
+                f"{len(results)} sources"
                 f"</div>",
                 unsafe_allow_html=True,
             )
 
-            with st.expander(f"Inspect evidence · {len(results)} sources"):
+            with st.expander("Inspect evidence"):
                 render_evidence(turn)
 
         else:
@@ -659,10 +629,6 @@ if not st.session_state.turns:
         """
 <div class="signalrank-empty">
 <h1>Find the evidence<br>that matters.</h1>
-<p>
-Ask naturally. SignalRank decides whether to answer conversationally
-or retrieve, rerank, and ground the response in inspectable evidence.
-</p>
 </div>
         """,
         unsafe_allow_html=True,
@@ -682,27 +648,22 @@ or retrieve, rerank, and ground the response in inspectable evidence.
     example_left, example_right = st.columns(2)
 
     if example_left.button(
-        "🦕  What caused dinosaur extinction?",
+        "🦕  Dinosaur extinction",
+        help="Supported by the demo corpus.",
         width="stretch",
     ):
         example_query = "What caused the extinction of the dinosaurs?"
 
     if example_right.button(
-        "☕  How do I make coffee?",
+        "☕  Making coffee?",
+        help="Intentionally absent from the demo corpus.",
         width="stretch",
     ):
         example_query = "How do I make coffee?"
 
-    st.caption(
-        "The dinosaur question is supported by the demo corpus. "
-        "Coffee is intentionally absent."
-    )
-
-    with st.expander("About the demo corpus"):
+    with st.expander("Demo corpus · 39 documents"):
         st.markdown(
             """
-**39 benchmark documents**
-
 **Science & space**  
 Aliens · climate observations · dinosaurs · lunar rovers ·
 Mars · Mars orbiters · oceans · radio astronomy · solar energy ·
