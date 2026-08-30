@@ -1,8 +1,8 @@
 <p align="center">
   <a href="https://signalrank-ui.icybeach-127c89e3.northeurope.azurecontainerapps.io">
     <img src="docs/assets/live_demo_cta.svg"
-         alt="Try the live SignalRank-RAG app"
-         width="900">
+         alt="Try chatting with SignalRank"
+         width="1200">
   </a>
 </p>
 
