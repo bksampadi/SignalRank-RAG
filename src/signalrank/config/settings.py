@@ -149,8 +149,9 @@ class QdrantConfig:
 class LLMConfig:
     """Configuration for the generative language model."""
 
-    model_name: str = "gemini-3.5-flash"
-    max_retries: int = 2
+    model_name: str
+    max_retries: int
+    max_output_tokens: int
 
     def __post_init__(self) -> None:
         if not self.model_name.strip():
@@ -158,6 +159,9 @@ class LLMConfig:
 
         if self.max_retries < 0:
             raise ValueError("max_retries cannot be negative")
+
+        if self.max_output_tokens <= 0:
+            raise ValueError("max_output_tokens must be greater than zero")
 
 
 @dataclass(frozen=True)
