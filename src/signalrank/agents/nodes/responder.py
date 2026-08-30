@@ -114,9 +114,14 @@ def make_responder_node(
                     ]
                 )
 
+        if not isinstance(response.content, str):
+            raise TypeError(
+                f"Expected text response, got {type(response.content).__name__}"
+            )
+
         result = {
             "messages": [response],
-            "final_answer": str(response.text),
+            "final_answer": response.content,
         }
 
         return result
