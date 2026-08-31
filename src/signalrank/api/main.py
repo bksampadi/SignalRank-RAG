@@ -50,6 +50,7 @@ def logfire_request_attributes(
 
     return {}
 
+
 def get_conversation_response(
     query: str,
 ) -> str | None:
@@ -85,6 +86,7 @@ def get_conversation_response(
         return "Not much 😄 Ask me something from the demo knowledge base."
 
     return None
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
