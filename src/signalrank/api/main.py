@@ -50,6 +50,41 @@ def logfire_request_attributes(
 
     return {}
 
+def get_conversation_response(
+    query: str,
+) -> str | None:
+    normalized = query.strip().lower()
+
+    if normalized in {"hi", "hello", "hey"}:
+        return "Hello! Ask me something about the demo knowledge base."
+
+    if normalized in {
+        "who are you?",
+        "who are you",
+    }:
+        return (
+            "I'm SignalRank-RAG, an evidence-first retrieval system. "
+            "I retrieve and rerank relevant passages from the demo corpus."
+        )
+
+    if normalized in {
+        "what can you do?",
+        "what can you do",
+    }:
+        return (
+            "I can search the demo corpus using sparse, dense, or hybrid "
+            "retrieval and show you the ranked evidence behind the answer."
+        )
+
+    if normalized in {
+        "what's up?",
+        "what's up",
+        "whats up?",
+        "whats up",
+    }:
+        return "Not much 😄 Ask me something from the demo knowledge base."
+
+    return None
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -186,6 +221,19 @@ def chat(
         service_token,
         request.app.state.service_token,
     )
+
+    conversation_answer = get_conversation_response(
+        payload.query,
+    )
+
+    if conversation_answer is not None:
+        return ChatResponse(
+            query=payload.query,
+            route="conversation",
+            response_mode=payload.response_mode,
+            answer=conversation_answer,
+            results=[],
+        )
 
     service: SearchService = request.app.state.search_service
 
