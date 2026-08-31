@@ -255,10 +255,15 @@ def evaluate_retrieval(
         raise ValueError("at least one query is required")
 
     if relevance_scores_by_query is None:
-        relevance_scores_by_query = [None] * len(retrieved_ids_by_query)
+        normalized_relevance_by_scores: list[dict[str, float] | None] = [
+            None for _ in retrieved_ids_by_query
+        ]
 
-    elif len(relevance_scores_by_query) != len(retrieved_ids_by_query):
-        raise ValueError("relevance score query sets must have equal length")
+    else:
+        if len(relevance_scores_by_query) != len(retrieved_ids_by_query):
+            raise ValueError("relevance score query sets must have equal length")
+
+        normalized_relevance_by_scores = relevance_scores_by_query
 
     query_results = [
         evaluate_query(
@@ -274,7 +279,7 @@ def evaluate_retrieval(
         ) in zip(
             retrieved_ids_by_query,
             relevant_ids_by_query,
-            relevance_scores_by_query,
+            normalized_relevance_by_scores,
             strict=True,
         )
     ]
