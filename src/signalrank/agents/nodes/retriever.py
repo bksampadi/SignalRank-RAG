@@ -1,7 +1,6 @@
 from langchain_core.runnables import Runnable, RunnableLambda
 
 from signalrank.agents.state import AgentState
-from signalrank.components.retrieval.result import SearchResult
 from signalrank.services.search_service import SearchService
 
 
@@ -9,7 +8,7 @@ def make_retriever_node(
     search_service: SearchService,
 ) -> Runnable[
     AgentState,
-    dict[str, list[SearchResult]],
+    dict[str, object],
 ]:
     """
     Create a retrieval node bound to SignalRank's retrieval service.
@@ -17,7 +16,7 @@ def make_retriever_node(
 
     def retriever_node(
         state: AgentState,
-    ) -> dict[str, list[SearchResult]]:
+    ) -> dict[str, object]:
         results = search_service.search(
             query=state["current_query"],
             retrieval_mode=state["retrieval_mode"],
@@ -25,6 +24,7 @@ def make_retriever_node(
         )
 
         return {
+            "route": "retrieval",
             "search_results": results,
         }
 

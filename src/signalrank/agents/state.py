@@ -17,6 +17,13 @@ RetrievalMode = Literal[
 ]
 
 
+ResponseMode = Literal[
+    "auto",
+    "evidence",
+    "synthesis",
+]
+
+
 class AgentState(TypedDict):
     """
     Shared state passed between SignalRank agent nodes.
@@ -27,16 +34,13 @@ class AgentState(TypedDict):
 
     current_query: str
     retrieval_mode: RetrievalMode
+    response_mode: ResponseMode
     top_k: int
 
     route: NotRequired[Route]
-
     search_results: NotRequired[list[SearchResult]]
-
     final_answer: NotRequired[str]
 
     plan: NotRequired[list[str]]
-
     current_step: NotRequired[int]
-
     tool_results: NotRequired[list[Any]]

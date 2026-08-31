@@ -1,12 +1,10 @@
-from typing import cast
-
-from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.runnables import Runnable, RunnableLambda
 from pydantic import BaseModel
 
 from signalrank.agents.state import AgentState, Route
 from signalrank.prompts.rag_prompts import ROUTER_SYSTEM_PROMPT
+from signalrank.services.llm_service import LLMService
 
 
 class RouteDecision(BaseModel):
@@ -14,29 +12,25 @@ class RouteDecision(BaseModel):
 
 
 def make_router_node(
-    llm: BaseChatModel,
+    llm_service: LLMService,
 ) -> Runnable[AgentState, dict[str, Route]]:
     """
     Create a router node bound to an LLM.
     """
 
-    router_llm = llm.with_structured_output(RouteDecision)
-
     def router_node(
         state: AgentState,
     ) -> dict[str, Route]:
-        decision = cast(
+        decision = llm_service.invoke_structured(
+            [
+                SystemMessage(
+                    content=ROUTER_SYSTEM_PROMPT,
+                ),
+                HumanMessage(
+                    content=state["current_query"],
+                ),
+            ],
             RouteDecision,
-            router_llm.invoke(
-                [
-                    SystemMessage(
-                        content=ROUTER_SYSTEM_PROMPT,
-                    ),
-                    HumanMessage(
-                        content=state["current_query"],
-                    ),
-                ]
-            ),
         )
 
         return {

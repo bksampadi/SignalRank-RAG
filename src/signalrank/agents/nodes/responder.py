@@ -1,4 +1,3 @@
-from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import (
     AIMessage,
     HumanMessage,
@@ -7,24 +6,18 @@ from langchain_core.messages import (
 from langchain_core.runnables import Runnable, RunnableLambda
 
 from signalrank.agents.state import AgentState
+from signalrank.components.retrieval.evidence import (
+    has_sufficient_evidence,
+)
 from signalrank.components.retrieval.result import SearchResult
 from signalrank.prompts.rag_prompts import (
     CONVERSATION_SYSTEM_PROMPT,
     RAG_SYSTEM_PROMPT,
 )
+from signalrank.services.llm_service import LLMService
 
 # Conservative initial abstention threshold.
 # Calibrate against benchmark score distributions before treating as final.
-MIN_EVIDENCE_SCORE = 1e-4
-
-
-def _has_sufficient_evidence(
-    results: list[SearchResult],
-) -> bool:
-    if not results:
-        return False
-
-    return max(result.score for result in results) >= MIN_EVIDENCE_SCORE
 
 
 def _format_context(
@@ -43,8 +36,51 @@ def _format_context(
     return "\n\n".join(sections)
 
 
+def _format_evidence_response(
+    results: list[SearchResult],
+) -> str:
+    if not has_sufficient_evidence(results):
+        return "I couldn't find reliable evidence for that in the demo corpus."
+
+    count = len(results)
+    noun = "passage" if count == 1 else "passages"
+
+    return f"Retrieved {count} ranked evidence {noun}. No LLM synthesis was used."
+
+
+def make_evidence_responder_node() -> Runnable[
+    AgentState,
+    dict[str, object],
+]:
+    """
+    Create a deterministic response node that exposes retrieval
+    results without calling an LLM.
+    """
+
+    def evidence_responder_node(
+        state: AgentState,
+    ) -> dict[str, object]:
+        results = state.get(
+            "search_results",
+            [],
+        )
+
+        answer = _format_evidence_response(results)
+
+        response = AIMessage(
+            content=answer,
+        )
+
+        return {
+            "messages": [response],
+            "final_answer": answer,
+        }
+
+    return RunnableLambda(evidence_responder_node)
+
+
 def make_responder_node(
-    llm: BaseChatModel,
+    llm_service: LLMService,
 ) -> Runnable[
     AgentState,
     dict[str, object],
@@ -63,7 +99,7 @@ def make_responder_node(
             raise RuntimeError("Agent route was not set before responder execution.")
 
         if route == "conversation":
-            response = llm.invoke(
+            response = llm_service.invoke(
                 [
                     SystemMessage(
                         content=CONVERSATION_SYSTEM_PROMPT,
@@ -78,7 +114,7 @@ def make_responder_node(
                 [],
             )
 
-            if not _has_sufficient_evidence(results):
+            if not has_sufficient_evidence(results):
                 response = AIMessage(
                     content=(
                         "I couldn't find reliable evidence for that in the demo corpus. "
@@ -97,7 +133,7 @@ def make_responder_node(
 
                 history = state["messages"][:-1]
 
-                response = llm.invoke(
+                response = llm_service.invoke(
                     [
                         SystemMessage(
                             content=RAG_SYSTEM_PROMPT,

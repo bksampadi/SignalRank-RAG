@@ -6,7 +6,9 @@ from typing import Any
 
 import logfire
 from fastapi import FastAPI, Header, HTTPException, Request, WebSocket, status
+from langchain_core.messages import HumanMessage
 
+from signalrank.agents.graph import build_agent_graph
 from signalrank.api.schemas import (
     ChatRequest,
     ChatResponse,
@@ -14,14 +16,13 @@ from signalrank.api.schemas import (
     RetrieveResponse,
     SearchResultResponse,
 )
-from signalrank.components.retrieval.evidence import (
-    has_sufficient_evidence,
-)
+from signalrank.components.llm.factory import build_llm_service
 from signalrank.config.configuration import ConfigurationManager
 from signalrank.constants import CONFIG_FILE_PATH
 from signalrank.pipelines.indexing_pipeline import IndexingPipeline
 from signalrank.pipelines.ranking_pipeline import RankingPipeline
 from signalrank.pipelines.retrieval_pipeline import RetrievalPipeline
+from signalrank.services.llm_service import LLMService
 from signalrank.services.ranking_service import RankingService
 from signalrank.services.retrieval_service import RetrievalService
 from signalrank.services.search_service import SearchService
@@ -142,6 +143,20 @@ async def lifespan(app: FastAPI):
 
     app.state.search_service = search_service
 
+    if config.llm is not None:
+        llm_service = build_llm_service(config.llm)
+    else:
+        llm_service = LLMService(providers=[])
+
+    app.state.llm_service = llm_service
+
+    agent_graph = build_agent_graph(
+        search_service=search_service,
+        llm_service=llm_service,
+    )
+
+    app.state.agent_graph = agent_graph
+
     yield
 
 
@@ -216,7 +231,8 @@ def chat(
     payload: ChatRequest,
     request: Request,
     service_token: str | None = Header(
-        default=None, alias="X-SignalRank-Service-Token"
+        default=None,
+        alias="X-SignalRank-Service-Token",
     ),
 ) -> ChatResponse:
     verify_service_token(
@@ -224,60 +240,69 @@ def chat(
         request.app.state.service_token,
     )
 
-    conversation_answer = get_conversation_response(
-        payload.query,
-    )
-
-    if conversation_answer is not None:
-        return ChatResponse(
-            query=payload.query,
-            route="conversation",
-            response_mode=payload.response_mode,
-            answer=conversation_answer,
-            results=[],
+    if payload.response_mode == "auto":
+        conversation_answer = get_conversation_response(
+            payload.query,
         )
 
-    service: SearchService = request.app.state.search_service
+        if conversation_answer is not None:
+            return ChatResponse(
+                query=payload.query,
+                route="conversation",
+                response_mode=payload.response_mode,
+                answer=conversation_answer,
+                results=[],
+            )
+
+    llm_service: LLMService = request.app.state.llm_service
+
+    if payload.response_mode in {"auto", "synthesis"} and not llm_service.available:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="LLM generation is not configured.",
+        )
+
+    graph = request.app.state.agent_graph
 
     with logfire.span(
-        "chat evidence query",
+        "agent chat",
         retrieval_mode=payload.mode,
+        response_mode=payload.response_mode,
         top_k=payload.top_k,
         query_length=len(payload.query),
-        response_mode=payload.response_mode,
     ):
-        results = service.search(
-            query=payload.query,
-            retrieval_mode=payload.mode,
-            top_k=payload.top_k,
+        result = graph.invoke(
+            {
+                "messages": [
+                    HumanMessage(content=payload.query),
+                ],
+                "current_query": payload.query,
+                "retrieval_mode": payload.mode,
+                "response_mode": payload.response_mode,
+                "top_k": payload.top_k,
+            }
         )
 
-    if not has_sufficient_evidence(results):
-        answer = (
-            "I couldn't find reliable evidence for that "
-            "in the demo corpus. "
-            "Try a topic such as dinosaurs, Mars, vaccines, batteries, "
-            "Python, retrieval, or mythology."
-        )
-    else:
-        answer = results[0].text
+    answer = result["final_answer"]
+    results = result.get("search_results", [])
+    route = result.get("route", "retrieval")
 
     return ChatResponse(
         query=payload.query,
-        route="retrieval",
+        route=route,
         response_mode=payload.response_mode,
         answer=answer,
         results=[
             SearchResultResponse(
-                chunk_id=result.chunk_id,
-                doc_id=result.doc_id,
-                text=result.text,
-                score=result.score,
-                rank=result.rank,
-                source_path=result.source_path,
-                metadata=result.metadata,
+                chunk_id=search_result.chunk_id,
+                doc_id=search_result.doc_id,
+                text=search_result.text,
+                score=search_result.score,
+                rank=search_result.rank,
+                source_path=search_result.source_path,
+                metadata=search_result.metadata,
             )
-            for result in results
+            for search_result in results
         ],
     )
 
