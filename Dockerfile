@@ -15,6 +15,15 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     --no-dev \
     --no-install-project
 
+ENV SENTENCE_TRANSFORMERS_HOME=/app/.cache/sentence_transformers
+ENV FLASHRANK_CACHE_DIR=/app/.cache/flashrank
+
+RUN .venv/bin/python -c \
+    "from sentence_transformers import SentenceTransformer; SentenceTransformer('sentence-transformers/all-mpnet-base-v2')"
+
+RUN .venv/bin/python -c \
+    "from flashrank import Ranker; Ranker(model_name='ms-marco-MiniLM-L-12-v2', cache_dir='/app/.cache/flashrank', max_length=512)"
+
 COPY . .
 
 RUN --mount=type=cache,target=/root/.cache/uv \

@@ -9,3 +9,7 @@ __pycache__
 .env
 research/
 tests/
+data/qdrant/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/

@@ -6,16 +6,16 @@ from typing import Any
 
 import logfire
 from fastapi import FastAPI, Header, HTTPException, Request, WebSocket, status
-from langchain_core.messages import HumanMessage
-from langchain_openrouter import ChatOpenRouter
 
-from signalrank.agents.graph import build_agent_graph
 from signalrank.api.schemas import (
     ChatRequest,
     ChatResponse,
     RetrieveRequest,
     RetrieveResponse,
     SearchResultResponse,
+)
+from signalrank.components.retrieval.evidence import (
+    has_sufficient_evidence,
 )
 from signalrank.config.configuration import ConfigurationManager
 from signalrank.constants import CONFIG_FILE_PATH
@@ -51,29 +51,6 @@ def logfire_request_attributes(
     return {}
 
 
-def get_agent_graph(request: Request):
-    graph = request.app.state.agent_graph
-
-    if graph is None:
-        config = request.app.state.config
-
-        llm = ChatOpenRouter(
-            model=config.llm.model_name,
-            max_retries=config.llm.max_retries,
-            max_tokens=config.llm.max_output_tokens,
-            temperature=0,
-        )
-
-        graph = build_agent_graph(
-            search_service=request.app.state.search_service,
-            llm=llm,
-        )
-
-        request.app.state.agent_graph = graph
-
-    return graph
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     config_filepath = Path(
@@ -87,11 +64,6 @@ async def lifespan(app: FastAPI):
 
     if not service_token:
         raise RuntimeError("SIGNALRANK_SERVICE_TOKEN is required.")
-
-    openrouter_api_key = os.getenv("OPENROUTER_API_KEY")
-
-    if not openrouter_api_key:
-        raise RuntimeError("OPENROUTER_API_KEY is required.")
 
     app.state.service_token = service_token
 
@@ -132,7 +104,6 @@ async def lifespan(app: FastAPI):
     )
 
     app.state.search_service = search_service
-    app.state.agent_graph = None
 
     yield
 
@@ -216,44 +187,35 @@ def chat(
         request.app.state.service_token,
     )
 
-    graph = get_agent_graph(request)
+    service: SearchService = request.app.state.search_service
 
     with logfire.span(
-        "agent query",
+        "chat evidence query",
         retrieval_mode=payload.mode,
         top_k=payload.top_k,
         query_length=len(payload.query),
+        response_mode=payload.response_mode,
     ):
-        state = graph.invoke(
-            {
-                "messages": [
-                    HumanMessage(
-                        content=payload.query,
-                    )
-                ],
-                "current_query": payload.query,
-                "retrieval_mode": payload.mode,
-                "top_k": payload.top_k,
-            }
+        results = service.search(
+            query=payload.query,
+            retrieval_mode=payload.mode,
+            top_k=payload.top_k,
         )
 
-        route = state.get("route")
-        answer = state.get("final_answer")
-
-        if route is None:
-            raise RuntimeError("Agent graph completed without setting route.")
-
-        if answer is None:
-            raise RuntimeError("Agent graph completed without setting final_answer.")
-
-    results = state.get(
-        "search_results",
-        [],
-    )
+    if not has_sufficient_evidence(results):
+        answer = (
+            "I couldn't find reliable evidence for that "
+            "in the demo corpus. "
+            "Try a topic such as dinosaurs, Mars, vaccines, batteries, "
+            "Python, retrieval, or mythology."
+        )
+    else:
+        answer = results[0].text
 
     return ChatResponse(
         query=payload.query,
-        route=route,
+        route="retrieval",
+        response_mode=payload.response_mode,
         answer=answer,
         results=[
             SearchResultResponse(

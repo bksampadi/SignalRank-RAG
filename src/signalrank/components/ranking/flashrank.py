@@ -1,3 +1,4 @@
+import os
 from typing import TypedDict, cast
 
 from flashrank import Ranker, RerankRequest
@@ -26,8 +27,15 @@ class FlashRankReranker:
             raise ValueError("max_length must be greater than zero")
 
         self._model_name = model_name
+
+        cache_dir = os.getenv(
+            "FLASHRANK_CACHE_DIR",
+            "/tmp",
+        )
+
         self._ranker = Ranker(
             model_name=model_name,
+            cache_dir=cache_dir,
             max_length=max_length,
         )
 

@@ -47,14 +47,26 @@ class RetrieveResponse(BaseModel):
 
 
 class ChatRequest(RetrieveRequest):
-    pass
+    response_mode: Literal[
+        "auto",
+        "evidence",
+        "synthesis",
+    ] = "auto"
 
 
 class ChatResponse(BaseModel):
     query: str
+
     route: Literal[
         "conversation",
         "retrieval",
     ]
+
+    response_mode: Literal[
+        "auto",
+        "evidence",
+        "synthesis",
+    ]
+
     answer: str
     results: list[SearchResultResponse]
