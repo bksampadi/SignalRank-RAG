@@ -35,29 +35,29 @@ SignalRank-RAG uses a small explicit graph rather than treating every request as
 ```text
 START
   ↓
-Intent Router
-  ├── conversation
-  │      ↓
-  │  Conversation Node
-  │      ↓
-  │     LLM
+Response Mode
   │
-  └── knowledge query
-         ↓
-      Search Service
-         ↓
-   retrieve + rerank
-         ↓
- Grounded Response Node
-         ↓
-        LLM
-         ↓
- Response + Evidence
+  ├── auto
+  │     ↓
+  │   Intent Router ── LLM structured decision
+  │     │
+  │     ├── conversation ──────────────┐
+  │     │                              ↓
+  │     └── retrieval → SearchService → Response Node → LLMService
+  │
+  ├── synthesis
+  │     ↓
+  │   SearchService → Response Node → LLMService
+  │
+  └── evidence
+        ↓
+      SearchService → Evidence Response
+                      (no LLM synthesis)
 ```
 
-The shared agent state carries conversation messages, the current query, retrieval mode and depth, retrieved and ranked evidence, and the selected route.
+The shared agent state carries conversation messages, the current query, retrieval and response modes, retrieval depth, retrieved and ranked evidence, and the selected route.
 
-Routing determines which path runs; the shared SearchService determines which evidence is retrieved and prioritized; and the response node turns that evidence into a grounded answer. Conversational requests bypass retrieval, while the retrieval layer remains independently accessible for inspection and evaluation.
+Routing determines which path runs; the shared SearchService determines which evidence is retrieved and prioritized. In synthesis paths, the response node sends the conversation and retrieved context through the LLMService; evidence mode instead returns ranked evidence without LLM synthesis.
 
 ``` text
 /retrieve ───────────────┐
@@ -73,38 +73,56 @@ Routing determines which path runs; the shared SearchService determines which ev
 ## System Architecture
 
 <p align="center">
-  <img src="https://img.shields.io/badge/AI%20%2F%20ML-6F5BD3?style=flat-square">
-  <img src="https://img.shields.io/badge/Retrieval%20%2F%20RAG-3B6EA8?style=flat-square">
-  <img src="https://img.shields.io/badge/Agentic%20Orchestration-B7791F?style=flat-square">
-  <img src="https://img.shields.io/badge/Platform%20%2F%20Software%20Engineering-2F7D6D?style=flat-square">
+  <img height="28" src="https://img.shields.io/badge/AI%20%2F%20ML-665191?style=flat-square">
+  <img height="28" src="https://img.shields.io/badge/Retrieval%20%2F%20RAG-3F718C?style=flat-square">
+  <img height="28" src="https://img.shields.io/badge/Agentic%20Orchestration-A95D45?style=flat-square">
+  <img height="28" src="https://img.shields.io/badge/Platform%20%2F%20Software%20Engineering-557567?style=flat-square">
 </p>
 
 ```mermaid
 flowchart TB
 
     %% =========================
-    %% USER / SOFTWARE / AGENTS
+    %% USER / APPLICATION / AGENTS
     %% =========================
 
     USER["👤 User"]
     UI["🖥️ Interface<br/>Streamlit"]
     API["⚡ API<br/>FastAPI"]
     GRAPH["🕸️ Agent Graph<br/>LangGraph"]
-    ROUTER{"🧭 Intent Router"}
 
-    USER --> UI --> API --> GRAPH --> ROUTER
+    USER --> UI --> API --> GRAPH
 
-    ROUTER -->|conversation| CONV["💬 Conversation Node"]
-    CONV --> LLM["✨ LLM"]
+    MODE{"⚙️ Response Mode"}
 
-    ROUTER -->|knowledge query| RET["🔎 Retrieval Engine<br/>BM25 · Dense · Hybrid"]
+    GRAPH --> MODE
 
-    RET --> RR["🎯 Reranker<br/>FlashRank"]
-    RR --> RESP["📚 Grounded Response Node"]
-    RESP --> LLM
+    MODE -->|auto| ROUTER{"🧭 Intent Router"}
+    MODE -->|synthesis / evidence| RET["🔎 Search Service"]
 
-    LLM --> RESULT["✅ Response + Evidence"]
+    ROUTER -->|conversation| RESP["📚 Response Node"]
+    ROUTER -->|retrieval| RET
+
+    RET --> DECIDE{"📖 Response Path"}
+
+    DECIDE -->|evidence| EVID["🔍 Evidence Response<br/>No LLM synthesis"]
+    DECIDE -->|auto / synthesis| RESP
+
+    RESP --> RESULT["✅ Response · Evidence"]
+    EVID --> RESULT
     RESULT --> USER
+
+
+    %% =========================
+    %% LLM PLANE
+    %% =========================
+
+    LLMS["✨ LLM Service<br/>Text · Structured Output · Failover"]
+    OR["🌐 OpenRouter<br/>LangChain Adapter"]
+
+    ROUTER -. structured decision .-> LLMS
+    RESP -. generation .-> LLMS
+    LLMS --> OR
 
 
     %% =========================
@@ -124,15 +142,21 @@ flowchart TB
     BM -. lexical evidence .-> RET
     QD -. semantic evidence .-> RET
 
+    RR["🎯 Reranker<br/>FlashRank"]
+    RET -. second-stage ranking .-> RR
+    RR -. ranked evidence .-> DECIDE
+
 
     %% =========================
     %% PLATFORM SUPPORT
     %% =========================
 
     OBS["📈 Observability<br/>Logfire"]
+
     OBS -. traces .-> API
     OBS -. traces .-> GRAPH
     OBS -. traces .-> RET
+    OBS -. traces .-> LLMS
 
     CI["⚙️ CI/CD<br/>GitHub Actions"]
     REG["📦 Container Registry<br/>GHCR"]
@@ -147,20 +171,55 @@ flowchart TB
     %% COLORS
     %% =========================
 
-    class EMB,RR,LLM ai
+    class EMB,RR,LLMS,OR ai
     class ING,BM,QD,RET rag
-    class GRAPH,ROUTER,CONV,RESP agentic
+    class GRAPH,MODE,ROUTER,RESP,DECIDE,EVID agentic
     class UI,API,OBS,CI,REG,AZ platform
     class DOCS,USER,RESULT neutral
 
-    classDef ai fill:#6F5BD3,stroke:#A99CE8,stroke-width:1.5px,color:#ffffff
-    classDef rag fill:#3B6EA8,stroke:#82A8CF,stroke-width:1.5px,color:#ffffff
-    classDef agentic fill:#B7791F,stroke:#D6A75C,stroke-width:1.5px,color:#ffffff
-    classDef platform fill:#2F7D6D,stroke:#72AA9E,stroke-width:1.5px,color:#ffffff
+    classDef ai fill:#665191,stroke:#A99CE8,stroke-width:1.5px,color:#ffffff
+    classDef rag fill:#3F718C,stroke:#82A8CF,stroke-width:1.5px,color:#ffffff
+    classDef agentic fill:#A95D45,stroke:#D6A75C,stroke-width:1.5px,color:#ffffff
+    classDef platform fill:#557567,stroke:#72AA9E,stroke-width:1.5px,color:#ffffff
     classDef neutral fill:#475569,stroke:#94A3B8,stroke-width:1.5px,color:#ffffff
 ```
 
 The same deterministic chunks feed sparse and dense retrieval. Qdrant implements the vector-database boundary, FlashRank provides second-stage ranking, and LangGraph coordinates the response path.
+
+---
+
+## Project Structure
+
+```text
+SignalRank-RAG/
+├── .github/workflows/        # CI/CD
+├── benchmarks/retrieval/     # corpus, queries, ground truth
+├── configs/                  # application, benchmark, production configuration
+├── scripts/                  # indexing, benchmark, and local demo utilities
+├── src/signalrank/
+│   ├── agents/               # graph state, routing, retrieval and response nodes
+│   ├── api/                  # FastAPI and request validation
+│   ├── components/
+│   │   ├── chunking/         # deterministic chunking
+│   │   ├── data_ingestion/   # document loaders
+│   │   ├── embeddings/       # SentenceTransformers / Gemini
+│   │   ├── llm/              # LLM provider protocol, adapters, and factory
+│   │   ├── ranking/          # reranking implementations
+│   │   ├── retrieval/        # BM25, dense and hybrid retrieval
+│   │   └── vector_store/     # Qdrant vector-database boundary
+│   ├── config/               # typed configuration
+│   ├── evaluation/           # retrieval metrics
+│   ├── observability/        # Logfire
+│   ├── pipelines/            # indexing and search orchestration
+│   ├── prompts/              # conversation and grounded RAG prompts
+│   ├── services/             # retrieval, ranking, search and LLM services
+│   └── ui/                   # Streamlit and relevance feedback
+├── tests/
+├── compose.yaml
+├── Dockerfile
+├── pyproject.toml
+└── uv.lock
+```
 
 ---
 
@@ -243,6 +302,18 @@ The benchmark configuration pins `sentence-transformers/all-mpnet-base-v2`, chun
 The application exposes both direct search and agentic response paths.
 
 ```text
+response_mode=auto
+    LLM-assisted intent routing;
+    conversational or retrieval-backed response
+
+response_mode=synthesis
+    always retrieve/rerank, then synthesize with the LLM
+
+response_mode=evidence
+    retrieve/rerank and return deterministic evidence without LLM synthesis
+```
+
+```text
 GET  /health
 POST /retrieve
 POST /chat
@@ -251,7 +322,7 @@ POST /chat
 `POST /retrieve` returns search results directly and supports bm25, dense, and hybrid modes. When ranking is enabled, retrieved candidates are reranked before being returned.
 
 
-`POST /chat` runs the agent graph. The router can send conversational requests directly to the responder or send corpus-backed requests through retrieval, ranking, and grounded generation.
+`POST /chat` supports deterministic handling for a small set of trivial conversational requests and otherwise executes the agent graph. The router can send conversational requests directly to the responder or send corpus-backed requests through retrieval, ranking, and grounded generation.
 
 Example:
 
@@ -325,7 +396,7 @@ Configuration covers:
 - hybrid fusion parameters
 - reranking and ranking depth
 - Qdrant execution mode and collection
-- LLM configuration
+- LLM provider, model, fallback, retry, and output-token configuration
 - runtime service behavior
 
 Qdrant can run in memory, persist locally, or connect to a remote/Qdrant Cloud instance.
@@ -336,6 +407,7 @@ Common deployment variables include:
 
 ```text
 GEMINI_API_KEY
+OPENROUTER_API_KEY
 QDRANT_URL
 QDRANT_API_KEY
 LOGFIRE_TOKEN
@@ -352,7 +424,7 @@ The live Streamlit retrieval UI lets users mark individual results as **Relevant
 
 Feedback is collected as retrieval-evaluation data rather than used to mutate rankings online. Each judgement can be associated with search/session context and result metadata, providing labelled evidence for retrieval diagnostics, relevance calibration, fusion experiments, and reranker evaluation.
 
-SignalRank-RAG uses Logfire for distributed tracing across the API, retrieval, embedding, ranking, agentic routing, vector-store operations, and relevance-feedback events.
+SignalRank-RAG uses Logfire for distributed tracing across the API, retrieval, embedding, ranking, agentic routing, LLM invocation and provider failures, vector-store operations, and relevance-feedback events.
 
 Operational spans capture metadata such as retrieval mode, route, embedding provider and dimension, collection, ranking workload, and execution timing.
 
@@ -388,44 +460,6 @@ Runtime endpoints and secrets are injected through deployment configuration rath
 
 ---
 
-<details>
-<summary><strong>Project structure</strong></summary>
-
-## Project Structure
-
-```text
-SignalRank-RAG/
-├── .github/workflows/        # CI/CD
-├── benchmarks/retrieval/     # corpus, queries, ground truth
-├── configs/                  # application, benchmark, production configuration
-├── scripts/                  # indexing, benchmark, and local demo utilities
-├── src/signalrank/
-│   ├── agents/               # graph state, routing, retrieval and response nodes
-│   ├── api/                  # FastAPI and request validation
-│   ├── components/
-│   │   ├── chunking/         # deterministic chunking
-│   │   ├── data_ingestion/   # document loaders
-│   │   ├── embeddings/       # SentenceTransformers / Gemini
-│   │   ├── ranking/          # reranking implementations
-│   │   ├── retrieval/        # BM25, dense and hybrid retrieval
-│   │   └── vector_store/     # Qdrant vector-database boundary
-│   ├── config/               # typed configuration
-│   ├── evaluation/           # retrieval metrics
-│   ├── observability/        # Logfire
-│   ├── pipelines/            # indexing and search orchestration
-│   ├── prompts/              # conversation and grounded RAG prompts
-│   ├── services/             # retrieval and ranking services
-│   └── ui/                   # Streamlit and relevance feedback
-├── tests/
-├── compose.yaml
-├── Dockerfile
-├── pyproject.toml
-└── uv.lock
-```
-</details>
-
----
-
 ## Roadmap
 
 ### Implemented
@@ -441,11 +475,15 @@ SignalRank-RAG/
 - [x] Agentic routing
 - [x] Conversational response path
 - [x] Grounded RAG response path
-- [x] LLM/runtime configuration
+- [x] Provider-agnostic LLM service boundary
+- [x] Configurable LLM provider, model and fallback policy
+- [x] Structured LLM routing
+- [x] Evidence-only response mode without LLM synthesis
 - [x] Per-result relevance feedback
 - [x] API service-token protection and request limits
 - [x] Containerized API and UI
 - [x] Automated GHCR publishing and Azure deployment
+
 
 ### Next
 
@@ -457,6 +495,21 @@ SignalRank-RAG/
 - [ ] Retrieval and ranking quality gates in CI
 - [ ] Richer agent routing and decision policies
 
+---
+
+## Cite
+
+If you find SignalRank-RAG useful in your work, you can cite the repository as:
+
+```bibtex
+@software{signalrank_rag,
+  author = {Bharath Sampadi},
+  title = {SignalRank-RAG: Reproducible Retrieval, Reranking, and Grounded Responses},
+  year = {2026},
+  publisher = {GitHub},
+  url = {https://github.com/bksampadi/SignalRank-RAG}
+}
+```
 ---
 
 ## License
