@@ -145,15 +145,26 @@ class QdrantConfig:
             raise ValueError("path is required when Qdrant mode is 'local'")
 
 
+LLMProviderType = Literal["openrouter",]
+
+
 @dataclass(frozen=True)
 class LLMConfig:
-    """Configuration for the generative language model."""
+    """Configuration for the LLM layer."""
 
-    model_name: str
-    max_retries: int
-    max_output_tokens: int
+    provider: LLMProviderType = "openrouter"
+    model_name: str = "openrouter/free"
+    fallback_models: tuple[str, ...] = ()
+    max_retries: int = 1
+    max_output_tokens: int = 512
 
     def __post_init__(self) -> None:
+        object.__setattr__(
+            self,
+            "fallback_models",
+            tuple(self.fallback_models),
+        )
+
         if not self.model_name.strip():
             raise ValueError("model_name cannot be empty")
 
@@ -196,6 +207,6 @@ class AppConfig:
     retrieval: RetrievalConfig
     ranking: RankingConfig
     qdrant: QdrantConfig
-    llm: LLMConfig
+    llm: LLMConfig | None
     logfire: LogfireConfig
     finewiki: FineWikiConfig

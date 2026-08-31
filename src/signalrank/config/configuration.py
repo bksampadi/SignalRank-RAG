@@ -24,6 +24,8 @@ class ConfigurationManager:
         self.config = read_yaml(config_filepath)
 
     def load(self) -> AppConfig:
+        llm_config = self.config.get("llm")
+
         return AppConfig(
             data_ingestion=DataIngestionConfig(**self.config.data_ingestion),
             chunking=ChunkingConfig(**self.config.chunking),
@@ -31,7 +33,7 @@ class ConfigurationManager:
             retrieval=RetrievalConfig(**self.config.retrieval),
             ranking=RankingConfig(**self.config.ranking),
             qdrant=QdrantConfig(**self.config.qdrant),
-            llm=LLMConfig(**self.config.get("llm", {})),
+            llm=(LLMConfig(llm_config) if llm_config is not None else None),
             logfire=LogfireConfig(**self.config.logfire),
             finewiki=FineWikiConfig(**self.config.finewiki),
         )

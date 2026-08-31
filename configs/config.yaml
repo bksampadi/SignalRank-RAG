@@ -40,8 +40,10 @@ qdrant:
   path: data/qdrant/dev
 
 llm:
+  provider: openrouter
   model_name: openrouter/free
-  max_retries: 2
+  fallback_models: []
+  max_retries: 1
   max_output_tokens: 512
 
 logfire:
