@@ -1,6 +1,12 @@
-from typing import Literal
-
 from pydantic import BaseModel, Field, field_validator
+
+from signalrank.types import (
+    EffectiveResponseMode,
+    FallbackReason,
+    ResponseMode,
+    RetrievalMode,
+    Route,
+)
 
 
 class RetrieveRequest(BaseModel):
@@ -8,11 +14,7 @@ class RetrieveRequest(BaseModel):
         min_length=1,
         max_length=500,
     )
-    mode: Literal[
-        "bm25",
-        "dense",
-        "hybrid",
-    ] = "dense"
+    mode: RetrievalMode = "dense"
     top_k: int = Field(
         default=5,
         ge=1,
@@ -42,31 +44,21 @@ class SearchResultResponse(BaseModel):
 
 class RetrieveResponse(BaseModel):
     query: str
-    mode: str
+    mode: RetrievalMode
     results: list[SearchResultResponse]
 
 
 class ChatRequest(RetrieveRequest):
-    response_mode: Literal[
-        "auto",
-        "evidence",
-        "synthesis",
-    ] = "auto"
+    response_mode: ResponseMode = "auto"
 
 
 class ChatResponse(BaseModel):
     query: str
+    route: Route
+    response_mode: ResponseMode
+    effective_response_mode: EffectiveResponseMode
 
-    route: Literal[
-        "conversation",
-        "retrieval",
-    ]
-
-    response_mode: Literal[
-        "auto",
-        "evidence",
-        "synthesis",
-    ]
+    fallback_reason: FallbackReason | None = None
 
     answer: str
     results: list[SearchResultResponse]
