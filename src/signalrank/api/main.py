@@ -250,17 +250,10 @@ def chat(
                 query=payload.query,
                 route="conversation",
                 response_mode=payload.response_mode,
+                effective_response_mode="conversation",
                 answer=conversation_answer,
                 results=[],
             )
-
-    llm_service: LLMService = request.app.state.llm_service
-
-    if payload.response_mode in {"auto", "synthesis"} and not llm_service.available:
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="LLM generation is not configured.",
-        )
 
     graph = request.app.state.agent_graph
 
@@ -284,13 +277,23 @@ def chat(
         )
 
     answer = result["final_answer"]
-    results = result.get("search_results", [])
-    route = result.get("route", "retrieval")
+    results = result.get(
+        "search_results",
+        [],
+    )
+    route = result.get(
+        "route",
+        "retrieval",
+    )
+    effective_response_mode = result["effective_response_mode"]
+    fallback_reason = result.get("fallback_reason")
 
     return ChatResponse(
         query=payload.query,
         route=route,
         response_mode=payload.response_mode,
+        effective_response_mode=effective_response_mode,
+        fallback_reason=fallback_reason,
         answer=answer,
         results=[
             SearchResultResponse(

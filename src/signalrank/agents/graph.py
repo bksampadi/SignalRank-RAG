@@ -8,9 +8,10 @@ from signalrank.agents.nodes.responder import (
 )
 from signalrank.agents.nodes.retriever import make_retriever_node
 from signalrank.agents.nodes.router import make_router_node
-from signalrank.agents.state import AgentState, Route
+from signalrank.agents.state import AgentState
 from signalrank.services.llm_service import LLMService
 from signalrank.services.search_service import SearchService
+from signalrank.types import Route
 
 EntryRoute = Literal[
     "router",
@@ -37,6 +38,9 @@ def route_from_start(
 def route_after_retrieval(
     state: AgentState,
 ) -> ResponseRoute:
+    if state.get("fallback_reason") == "llm_unavailable":
+        return "evidence_responder"
+
     if state["response_mode"] == "evidence":
         return "evidence_responder"
 
