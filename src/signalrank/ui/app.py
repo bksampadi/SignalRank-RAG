@@ -229,6 +229,25 @@ GREETING_RESPONSES = {
 }
 
 
+def get_http_error_detail(
+    response: requests.Response | None,
+) -> str | None:
+    if response is None:
+        return None
+
+    try:
+        payload = response.json()
+    except ValueError:
+        return None
+
+    detail = payload.get("detail")
+
+    if isinstance(detail, str):
+        return detail
+
+    return None
+
+
 def get_greeting_response(
     query: str,
 ) -> str | None:
@@ -348,17 +367,20 @@ def request_chat(
 
             return (
                 None,
-                "SignalRank could not connect to the local retrieval service.",
+                "SignalRank could not reach the service. Please try again shortly.",
             )
 
         except requests.HTTPError as exc:
             status_code = exc.response.status_code if exc.response is not None else None
+
+            detail = get_http_error_detail(exc.response)
 
             if LOGFIRE_ENABLED:
                 logfire.error(
                     "Chat service returned HTTP error",
                     error=str(exc),
                     status_code=status_code,
+                    detail=detail,
                     session_id=st.session_state.session_id,
                     search_id=search_id,
                 )
@@ -367,6 +389,15 @@ def request_chat(
                 return (
                     None,
                     "SignalRank reached the service, but authentication failed.",
+                )
+
+            if status_code == 503:
+                return (
+                    None,
+                    (
+                        "LLM generation is temporarily unavailable. "
+                        "SignalRank's retrieval service remains available."
+                    ),
                 )
 
             if status_code and status_code >= 500:
