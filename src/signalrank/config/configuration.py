@@ -33,7 +33,7 @@ class ConfigurationManager:
             retrieval=RetrievalConfig(**self.config.retrieval),
             ranking=RankingConfig(**self.config.ranking),
             qdrant=QdrantConfig(**self.config.qdrant),
-            llm=(LLMConfig(llm_config) if llm_config is not None else None),
+            llm=(LLMConfig(**llm_config) if llm_config is not None else None),
             logfire=LogfireConfig(**self.config.logfire),
             finewiki=FineWikiConfig(**self.config.finewiki),
         )
