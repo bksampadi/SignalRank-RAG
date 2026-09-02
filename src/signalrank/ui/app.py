@@ -655,9 +655,7 @@ def render_turn(turn: dict) -> None:
 
         if results:
             mode_label = turn["mode"].title()
-            st.caption(
-                f"{mode_label} · {format_source_count(len(results))}"
-            )
+            st.caption(f"{mode_label} · {format_source_count(len(results))}")
 
             with st.expander("Inspect evidence"):
                 render_evidence(turn)
