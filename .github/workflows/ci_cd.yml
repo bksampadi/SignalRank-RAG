@@ -158,6 +158,7 @@ jobs:
                     -e LOGFIRE_IGNORE_NO_CONFIG=1 \
                     -e SIGNALRANK_SERVICE_TOKEN \
                     -e OPENROUTER_API_KEY=ci-placeholder \
+                    -e GROQ_API_KEY="${{ secrets.GROQ_API_KEY }}" \
                     -v "${{ github.workspace }}/.ci-data:/app/data" \
                     signalrank-rag:test
 
@@ -170,8 +171,15 @@ jobs:
                       exit 0
                     fi
 
+                    if ! docker ps --filter "name=signalrank-api" --filter "status=running" --quiet | grep -q .; then
+                      echo "Container stopped unexpectedly"
+                      docker ps -a
+                      docker logs signalrank-api || true
+                      exit 1
+                    fi
+
                     echo "Waiting for API..."
-                    sleep 5
+                    sleep 2
                   done
 
                   echo "API failed to become healthy"
