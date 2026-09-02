@@ -43,6 +43,7 @@ dependencies = [
     "requests>=2.34.2",
     "flashrank>=0.2.10,<0.3",
     "langchain-openrouter>=0.2.8",
+    "langchain-groq>=1.1.3",
 ]
 
 

@@ -40,8 +40,8 @@ qdrant:
   path: data/qdrant/benchmark
 
 llm:
-  provider: openrouter
-  model_name: openrouter/free
+  provider: groq
+  model_name: openai/gpt-oss-20b
   fallback_models: []
   max_retries: 2
   max_output_tokens: 512

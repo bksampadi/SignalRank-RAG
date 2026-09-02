@@ -145,7 +145,10 @@ class QdrantConfig:
             raise ValueError("path is required when Qdrant mode is 'local'")
 
 
-LLMProviderType = Literal["openrouter",]
+LLMProviderType = Literal[
+    "openrouter",
+    "groq",
+]
 
 
 @dataclass(frozen=True)
