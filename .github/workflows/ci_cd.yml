@@ -171,10 +171,10 @@ jobs:
                       exit 0
                     fi
 
-                    if ! docker ps --filter "name=signalrank-api" --filter "status=running" --quiet | grep -q .; then
+                    if ! docker ps --filter "name=signalrank-rag" --filter "status=running" --quiet | grep -q .; then
                       echo "Container stopped unexpectedly"
                       docker ps -a
-                      docker logs signalrank-api || true
+                      docker logs signalrank-rag || true
                       exit 1
                     fi
 
