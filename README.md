@@ -21,9 +21,6 @@ It combines deterministic ingestion, lexical and semantic retrieval, hybrid fusi
 ![Qdrant](https://img.shields.io/badge/Qdrant-vector%20database-875566?logo=qdrant&logoColor=white)
 ![Azure](https://img.shields.io/badge/Azure-Container%20Apps-4D7188?logo=microsoftazure&logoColor=white)
 
-[Live API docs](https://signalrank-api.icybeach-127c89e3.northeurope.azurecontainerapps.io/docs) · [Health](https://signalrank-api.icybeach-127c89e3.northeurope.azurecontainerapps.io/health)
-
-> The first request may take a few seconds if Azure Container Apps has scaled to zero.
 
 The retrieval UI remains intentionally inspectable: users can compare BM25, dense, and hybrid retrieval and submit per-result relevance feedback. The application layer now also supports agentic routing and grounded response generation on top of the retrieval and ranking stack.
 
