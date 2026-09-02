@@ -1,3 +1,4 @@
+import html
 import os
 import time
 import uuid
@@ -35,123 +36,208 @@ st.set_page_config(
 st.markdown(
     """
 <style>
+:root {
+    --sr-bg: #FAFAF7;
+    --sr-surface: #F4F5F1;
+    --sr-ink: #29322D;
+    --sr-muted: #728078;
+    --sr-signal: #61766A;
+    --sr-border: rgba(97, 118, 106, 0.16);
+    --sr-border-strong: rgba(97, 118, 106, 0.26);
+    --sr-radius-sm: 10px;
+    --sr-radius: 14px;
+    --sr-radius-lg: 20px;
+}
+
+html,
+body,
+[data-testid="stAppViewContainer"] {
+    background: var(--sr-bg);
+    color: var(--sr-ink);
+}
+
 .block-container {
-    max-width: 860px;
-    padding-top: 3.5rem;
-    padding-bottom: 7rem;
+    max-width: 900px;
+    padding-top: 4rem;
+    padding-bottom: 7.5rem;
 }
 
 /* Streamlit chrome */
-#MainMenu {
-    visibility: hidden;
-}
-
-footer {
-    visibility: hidden;
-}
-
+#MainMenu,
+footer,
 [data-testid="stToolbar"] {
     visibility: hidden;
 }
 
-/* Brand */
+/* ------------------------------------------------------------------
+   Product masthead
+   ------------------------------------------------------------------ */
+
+.st-key-brand_header {
+    position: sticky;
+    top: 2.75rem;
+    z-index: 100;
+    background: rgba(250, 250, 247, 0.94);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--sr-border);
+    padding: 0.65rem 0 0.8rem 0;
+    margin-bottom: 0.35rem;
+}
+
+.signalrank-brandline {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
 .signalrank-brand {
-    font-size: 1.15rem;
-    font-weight: 760;
-    letter-spacing: -0.025em;
-    margin: 0;
+    font-size: 1.08rem;
+    font-weight: 780;
+    letter-spacing: -0.03em;
+    line-height: 1;
 }
 
 .signalrank-brand span {
-    opacity: 0.45;
-    font-weight: 600;
+    opacity: 0.42;
+    font-weight: 620;
+}
+
+.signalrank-mark {
+    width: 9px;
+    height: 9px;
+    border: 1.5px solid var(--sr-signal);
+    border-radius: 999px;
+    box-shadow: inset 0 0 0 2px var(--sr-bg);
+    background: var(--sr-signal);
 }
 
 .signalrank-tagline {
-    margin-top: 0.15rem;
-    font-size: 0.82rem;
-    opacity: 0.5;
+    margin-top: 0.28rem;
+    font-size: 0.78rem;
+    color: var(--sr-muted);
+    letter-spacing: 0.01em;
 }
 
-/* Empty-state landing */
+/* ------------------------------------------------------------------
+   Landing state
+   ------------------------------------------------------------------ */
+
 .signalrank-empty {
     text-align: center;
-    padding-top: clamp(3rem, 10vh, 7rem);
-    padding-bottom: 1.5rem;
+    padding-top: clamp(1.4rem, 4vh, 3rem);
+    padding-bottom: 1.35rem;
 }
 
 .signalrank-empty h1 {
-    font-size: clamp(2.4rem, 6vw, 4rem);
-    line-height: 1.03;
-    letter-spacing: -0.05em;
-    margin: 0;
-    font-weight: 760;
+    max-width: 720px;
+    margin: 0 auto;
+    font-size: clamp(2.65rem, 6.2vw, 4.65rem);
+    line-height: 0.98;
+    letter-spacing: -0.058em;
+    font-weight: 790;
 }
 
-/* Quiet technical metadata */
-.signalrank-meta {
-    font-size: 0.78rem;
-    opacity: 0.5;
-    margin-top: 0.45rem;
+.signalrank-empty h1 span {
+    color: var(--sr-signal);
 }
 
-/* Chat */
+/* ------------------------------------------------------------------
+   Branded chat turns
+   ------------------------------------------------------------------ */
+
+[data-testid="stChatMessageAvatarUser"],
+[data-testid="stChatMessageAvatarAssistant"] {
+    display: none;
+}
+
 [data-testid="stChatMessage"] {
+    gap: 0;
     background: transparent;
     border: 0;
-    padding-top: 0.75rem;
-    padding-bottom: 0.75rem;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
 }
 
 [data-testid="stChatMessageContent"] {
     font-size: 1rem;
-    line-height: 1.7;
+    line-height: 1.72;
+    width: 100%;
 }
 
 [data-testid="stChatMessageContent"] p {
-    line-height: 1.7;
+    line-height: 1.72;
 }
 
-/* Input */
+[data-testid="stChatMessage"]:has(
+    [data-testid="stChatMessageAvatarAssistant"]
+) {
+    position: relative;
+    padding-left: 1.15rem;
+    border-left: 2px solid rgba(97, 118, 106, 0.28);
+}
+
+[data-testid="stChatMessage"]:has(
+    [data-testid="stChatMessageAvatarUser"]
+) {
+    padding-left: 1.15rem;
+    opacity: 0.92;
+}
+
+.signalrank-role {
+    margin-bottom: 0.42rem;
+    font-size: 0.67rem;
+    font-weight: 760;
+    letter-spacing: 0.115em;
+    text-transform: uppercase;
+    color: var(--sr-signal);
+}
+
+.signalrank-role-query {
+    color: var(--sr-muted);
+    opacity: 0.78;
+}
+
+/* ------------------------------------------------------------------
+   Light alignment for existing controls
+   ------------------------------------------------------------------ */
+
 [data-testid="stChatInput"] {
-    border-radius: 18px;
+    border-radius: var(--sr-radius-lg);
+    border-color: var(--sr-border-strong);
+    box-shadow: 0 10px 30px rgba(41, 50, 45, 0.06);
 }
 
-/* Buttons */
-div[data-testid="stButton"] > button {
-    border-radius: 10px;
+[data-testid="stChatInput"]:focus-within {
+    border-color: rgba(97, 118, 106, 0.48);
+    box-shadow: 0 10px 34px rgba(41, 50, 45, 0.08);
 }
 
-/* Expanders */
+div[data-testid="stButton"] > button,
+div[data-testid="stPopover"] button {
+    border-radius: var(--sr-radius-sm);
+    border-color: var(--sr-border);
+}
+
 div[data-testid="stExpander"] {
-    border-radius: 12px;
+    border-radius: var(--sr-radius);
+    border-color: var(--sr-border);
 }
 
-/* Retrieval controls */
-.retrieval-status {
-    padding-top: 0.4rem;
-    font-size: 0.78rem;
-    opacity: 0.5;
-}
+@media (max-width: 640px) {
+    .block-container {
+        padding-top: 0.75rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
 
-/* Evidence */
-.evidence-source {
-    font-size: 0.95rem;
-    font-weight: 650;
-}
+    .signalrank-empty {
+        padding-top: 3.2rem;
+    }
 
-.evidence-path {
-    font-size: 0.76rem;
-    opacity: 0.45;
-}
-
-.evidence-score {
-    font-size: 0.76rem;
-    opacity: 0.55;
-}
-
-hr {
-    opacity: 0.1;
+    .signalrank-empty h1 {
+        font-size: clamp(2.5rem, 13vw, 3.6rem);
+    }
 }
 </style>
     """,
@@ -208,7 +294,7 @@ def clear_chat() -> None:
 
 
 # ---------------------------------------------------------------------
-# Helpers
+# Product language
 # ---------------------------------------------------------------------
 
 WARMUP_MESSAGES = (
@@ -220,13 +306,18 @@ WARMUP_MESSAGES = (
 )
 
 GREETING_RESPONSES = {
-    "hi": "Hi! How can I help you today?",
-    "hello": "Hello! How can I help you today?",
-    "hey": "Hey! What would you like to explore?",
-    "hi!": "Hi! How can I help you today?",
-    "hello!": "Hello! How can I help you today?",
-    "hey!": "Hey! What would you like to explore?",
+    "hi": "Hi — what would you like to investigate?",
+    "hello": "Hello — what would you like to investigate?",
+    "hey": "Hey — what would you like to investigate?",
+    "hi!": "Hi — what would you like to investigate?",
+    "hello!": "Hello — what would you like to investigate?",
+    "hey!": "Hey — what would you like to investigate?",
 }
+
+
+# ---------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------
 
 
 def get_http_error_detail(
@@ -248,9 +339,7 @@ def get_http_error_detail(
     return None
 
 
-def get_greeting_response(
-    query: str,
-) -> str | None:
+def get_greeting_response(query: str) -> str | None:
     return GREETING_RESPONSES.get(query.strip().lower())
 
 
@@ -279,7 +368,6 @@ def wait_for_backend(
             pass
 
         message = WARMUP_MESSAGES[attempt % len(WARMUP_MESSAGES)]
-
         warmup_notice.caption(message)
         time.sleep(delay_seconds)
 
@@ -292,6 +380,16 @@ def format_score(score: float) -> str:
         return f"{score:.1e}"
 
     return f"{score:.3f}"
+
+
+def render_role(label: str, *, query: bool = False) -> None:
+    role_class = " signalrank-role-query" if query else ""
+    safe_label = html.escape(label)
+
+    st.markdown(
+        f'<div class="signalrank-role{role_class}">{safe_label}</div>',
+        unsafe_allow_html=True,
+    )
 
 
 def request_chat(
@@ -372,7 +470,6 @@ def request_chat(
 
         except requests.HTTPError as exc:
             status_code = exc.response.status_code if exc.response is not None else None
-
             detail = get_http_error_detail(exc.response)
 
             if LOGFIRE_ENABLED:
@@ -442,9 +539,16 @@ def request_chat(
         "answer": data.get("answer"),
         "results": data.get("results", []),
         "elapsed_seconds": elapsed_seconds,
+        "degraded": data.get("degraded", False),
+        "effective_response_mode": data.get("effective_response_mode"),
     }
 
     return turn, None
+
+
+# ---------------------------------------------------------------------
+# Evidence + feedback
+# ---------------------------------------------------------------------
 
 
 def render_feedback(
@@ -457,26 +561,24 @@ def render_feedback(
     )
 
     feedback_key = f"{turn['search_id']}:{chunk_id}"
-
     recorded_feedback = st.session_state.feedback.get(feedback_key)
 
     relevant_col, not_relevant_col, _ = st.columns([1, 1.2, 4])
 
     relevant = relevant_col.button(
-        "👍 Relevant",
+        "Relevant",
         key=f"relevant-{feedback_key}",
         disabled=recorded_feedback is not None,
     )
 
     not_relevant = not_relevant_col.button(
-        "👎 Not relevant",
+        "Not relevant",
         key=f"not-relevant-{feedback_key}",
         disabled=recorded_feedback is not None,
     )
 
     if relevant or not_relevant:
         relevance = "relevant" if relevant else "not_relevant"
-
         st.session_state.feedback[feedback_key] = relevance
 
         if LOGFIRE_ENABLED:
@@ -498,7 +600,6 @@ def render_feedback(
 
     if recorded_feedback:
         label = "Relevant" if recorded_feedback == "relevant" else "Not relevant"
-
         st.caption(f"Feedback recorded · {label}")
 
 
@@ -509,33 +610,20 @@ def render_evidence(turn: dict) -> None:
         rank = result.get("rank", index)
         score = float(result.get("score", 0.0))
         source_path = result.get("source_path", "")
-
         source_name = Path(source_path).name if source_path else "Unknown source"
 
         source_col, score_col = st.columns([5, 1])
 
         with source_col:
-            st.markdown(
-                f'<div class="evidence-source">{rank}. {source_name}</div>',
-                unsafe_allow_html=True,
-            )
+            st.markdown(f"**{rank}. {source_name}**")
 
         with score_col:
-            st.markdown(
-                f'<div class="evidence-score" '
-                f'style="text-align:right;">'
-                f"{format_score(score)}"
-                f"</div>",
-                unsafe_allow_html=True,
-            )
+            st.caption(format_score(score))
 
         st.markdown(result.get("text", ""))
 
         if source_path:
-            st.markdown(
-                f'<div class="evidence-path">{source_path}</div>',
-                unsafe_allow_html=True,
-            )
+            st.caption(source_path)
 
         st.write("")
         render_feedback(turn, result)
@@ -546,47 +634,44 @@ def render_evidence(turn: dict) -> None:
 
 def render_turn(turn: dict) -> None:
     with st.chat_message("user"):
+        render_role("Query", query=True)
         st.markdown(turn["query"])
 
     with st.chat_message("assistant"):
+        render_role("SignalRank")
+
         answer = turn.get("answer")
 
         if answer:
             st.markdown(answer)
         else:
-            st.markdown("I couldn't produce an answer for that request.")
+            st.markdown("SignalRank couldn't produce an answer for that request.")
 
         route = turn.get("route", "unknown")
         results = turn.get("results", [])
 
-        # Conversation should feel like conversation.
-        # Don't expose retrieval machinery when none was used.
         if route == "conversation":
             return
 
         if results:
             mode_label = turn["mode"].title()
-
-            st.markdown(
-                f'<div class="signalrank-meta">'
-                f"{mode_label} · "
-                f"{format_source_count(len(results))}"
-                f"</div>",
-                unsafe_allow_html=True,
+            st.caption(
+                f"{mode_label} · {format_source_count(len(results))}"
             )
 
             with st.expander("Inspect evidence"):
                 render_evidence(turn)
-
         else:
-            st.markdown(
-                '<div class="signalrank-meta">No supporting evidence retrieved</div>',
-                unsafe_allow_html=True,
-            )
+            st.caption("No supporting evidence retrieved")
+
+
+# ---------------------------------------------------------------------
+# Retrieval controls
+# ---------------------------------------------------------------------
 
 
 def render_retrieval_controls() -> None:
-    with st.popover("⚙ Retrieval"):
+    with st.popover("Retrieval"):
         st.segmented_control(
             "Mode",
             options=[
@@ -608,31 +693,33 @@ def render_retrieval_controls() -> None:
 # Header
 # ---------------------------------------------------------------------
 
-header_col, action_col = st.columns(
-    [5, 1],
-    vertical_alignment="center",
-)
-
-with header_col:
-    st.markdown(
-        """
-<div class="signalrank-brand">
-SignalRank<span>-RAG</span>
-</div>
-<div class="signalrank-tagline">
-Evidence you can inspect.
-</div>
-        """,
-        unsafe_allow_html=True,
+with st.container(key="brand_header"):
+    header_col, action_col = st.columns(
+        [5, 1.15],
+        vertical_alignment="center",
     )
 
-with action_col:
-    if st.session_state.turns:
-        st.button(
-            "New chat",
-            on_click=clear_chat,
-            width="stretch",
+    with header_col:
+        st.markdown(
+            """
+<div class="signalrank-brandline">
+    <span class="signalrank-mark"></span>
+    <div class="signalrank-brand">SignalRank<span>-RAG</span></div>
+</div>
+<div class="signalrank-tagline">Evidence you can inspect.</div>
+            """,
+            unsafe_allow_html=True,
         )
+
+    with action_col:
+        if st.session_state.turns:
+            st.button(
+                "New chat",
+                on_click=clear_chat,
+                width="stretch",
+                type="tertiary",
+                help="Clear this conversation and start again.",
+            )
 
 
 # ---------------------------------------------------------------------
@@ -646,22 +733,27 @@ if not st.session_state.turns:
     st.markdown(
         """
 <div class="signalrank-empty">
-<h1>Find the evidence<br>that matters.</h1>
+    <h1>Find the signal.<br><span>Inspect the evidence.</span></h1>
 </div>
         """,
         unsafe_allow_html=True,
     )
 
-    # Inline input for the landing page.
+    # st.chat_input becomes inline when placed inside a layout container.
     with st.container():
         typed_query = st.chat_input(
-            "Ask SignalRank...",
+            "Ask SignalRank…",
             key="empty_chat_input",
         )
 
-    render_retrieval_controls()
+    control_col, spacer_col = st.columns([1.2, 4.8])
+    with control_col:
+        render_retrieval_controls()
 
-    st.write("")
+    st.markdown(
+        '<div style="margin:1.4rem 0 0.55rem 0; font-size:0.70rem; font-weight:700; letter-spacing:0.095em; text-transform:uppercase; color:var(--sr-muted);">Try a demo query</div>',
+        unsafe_allow_html=True,
+    )
 
     example_left, example_right = st.columns(2)
 
@@ -673,7 +765,7 @@ if not st.session_state.turns:
         example_query = "What caused the extinction of the dinosaurs?"
 
     if example_right.button(
-        "☕  Making coffee?",
+        "☕  Making coffee",
         help="Intentionally absent from the demo corpus.",
         width="stretch",
     ):
@@ -705,8 +797,8 @@ underworld
         )
 
         st.caption(
-            "Demo searches and relevance feedback may be logged "
-            "for evaluation. Please do not enter sensitive information."
+            "Demo searches and relevance feedback may be logged for evaluation. "
+            "Please do not enter sensitive information."
         )
 
 
@@ -721,11 +813,14 @@ else:
         render_turn(turn)
 
     st.write("")
-    render_retrieval_controls()
+
+    controls_col, spacer_col = st.columns([1.2, 4.8])
+    with controls_col:
+        render_retrieval_controls()
 
     # Main-body chat input stays pinned to the bottom.
     typed_query = st.chat_input(
-        "Ask SignalRank...",
+        "Ask SignalRank…",
         key="conversation_chat_input",
     )
 
@@ -743,13 +838,9 @@ if submitted_query:
         selected_mode = st.session_state.retrieval_mode or "Dense"
         selected_top_k = st.session_state.top_k
 
-        # Show the user message immediately.
         with st.chat_message("user"):
+            render_role("Query", query=True)
             st.markdown(query)
-
-        # -------------------------------------------------------------
-        # Fast path: obvious greetings need no backend or LLM.
-        # -------------------------------------------------------------
 
         greeting_response = get_greeting_response(query)
 
@@ -763,16 +854,15 @@ if submitted_query:
                 "answer": greeting_response,
                 "results": [],
                 "elapsed_seconds": 0.0,
+                "degraded": False,
+                "effective_response_mode": None,
             }
 
             st.session_state.turns.append(turn)
             st.rerun()
 
-        # -------------------------------------------------------------
-        # Everything else uses SignalRank.
-        # -------------------------------------------------------------
-
         with st.chat_message("assistant"):
+            render_role("SignalRank")
             warmup_notice = st.empty()
 
             backend_ready = wait_for_backend(
@@ -788,7 +878,7 @@ if submitted_query:
                 )
 
             else:
-                with st.spinner("Thinking..."):
+                with st.spinner("Searching and ranking evidence…"):
                     turn, error = request_chat(
                         query=query,
                         mode=selected_mode,
