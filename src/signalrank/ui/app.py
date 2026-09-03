@@ -285,12 +285,16 @@ if "retrieval_mode" not in st.session_state:
     st.session_state.retrieval_mode = "Dense"
 
 if "top_k" not in st.session_state:
-    st.session_state.top_k = 5
+    st.session_state.top_k = 2
+
+if "pending_query" not in st.session_state:
+    st.session_state.pending_query = None
 
 
 def clear_chat() -> None:
     st.session_state.turns = []
     st.session_state.feedback = {}
+    st.session_state.pending_query = None
 
 
 # ---------------------------------------------------------------------
@@ -727,7 +731,54 @@ with st.container(key="brand_header"):
 example_query = None
 typed_query = None
 
-if not st.session_state.turns:
+pending_query = st.session_state.pending_query
+
+if pending_query:
+    query = str(pending_query["query"])
+    selected_mode = str(pending_query["mode"])
+    selected_top_k = int(pending_query["top_k"])
+
+    st.write("")
+
+    with st.chat_message("user"):
+        render_role("Query", query=True)
+        st.markdown(query)
+
+    with st.chat_message("assistant"):
+        render_role("SignalRank")
+
+        warmup_notice = st.empty()
+        warmup_notice.caption("◌ Connecting to SignalRank…")
+
+        backend_ready = wait_for_backend(warmup_notice)
+        warmup_notice.empty()
+
+        if not backend_ready:
+            st.session_state.pending_query = None
+            st.info(
+                "SignalRank is taking unusually long to wake up. "
+                "Please try again in a moment."
+            )
+            st.stop()
+
+        with st.spinner("Searching and ranking evidence…"):
+            turn, error = request_chat(
+                query=query,
+                mode=selected_mode,
+                top_k=selected_top_k,
+            )
+
+        st.session_state.pending_query = None
+
+        if error:
+            st.info(error)
+            st.stop()
+
+        if turn:
+            st.session_state.turns.append(turn)
+            st.rerun()
+
+elif not st.session_state.turns:
     st.markdown(
         """
 <div class="signalrank-empty">
@@ -836,10 +887,6 @@ if submitted_query:
         selected_mode = st.session_state.retrieval_mode or "Dense"
         selected_top_k = st.session_state.top_k
 
-        with st.chat_message("user"):
-            render_role("Query", query=True)
-            st.markdown(query)
-
         greeting_response = get_greeting_response(query)
 
         if greeting_response:
@@ -859,33 +906,10 @@ if submitted_query:
             st.session_state.turns.append(turn)
             st.rerun()
 
-        with st.chat_message("assistant"):
-            render_role("SignalRank")
-            warmup_notice = st.empty()
+        st.session_state.pending_query = {
+            "query": query,
+            "mode": selected_mode,
+            "top_k": selected_top_k,
+        }
 
-            backend_ready = wait_for_backend(
-                warmup_notice,
-            )
-
-            warmup_notice.empty()
-
-            if not backend_ready:
-                st.info(
-                    "SignalRank is taking unusually long to wake up. "
-                    "Please try again in a moment."
-                )
-
-            else:
-                with st.spinner("Searching and ranking evidence…"):
-                    turn, error = request_chat(
-                        query=query,
-                        mode=selected_mode,
-                        top_k=selected_top_k,
-                    )
-
-                if error:
-                    st.info(error)
-
-                elif turn:
-                    st.session_state.turns.append(turn)
-                    st.rerun()
+        st.rerun()
