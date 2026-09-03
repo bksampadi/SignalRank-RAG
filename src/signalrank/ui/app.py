@@ -673,7 +673,7 @@ def render_turn(turn: dict) -> None:
 
 
 def render_retrieval_controls() -> None:
-    with st.popover("Retrieval"):
+    with st.popover("Tune"):
         st.segmented_control(
             "Mode",
             options=[
@@ -697,7 +697,7 @@ def render_retrieval_controls() -> None:
 
 with st.container(key="brand_header"):
     header_col, action_col = st.columns(
-        [5, 1.15],
+        [4.7, 1.6],
         vertical_alignment="center",
     )
 
@@ -708,20 +708,29 @@ with st.container(key="brand_header"):
     <span class="signalrank-mark"></span>
     <div class="signalrank-brand">SignalRank<span>-RAG</span></div>
 </div>
-<div class="signalrank-tagline">Evidence you can inspect.</div>
+<div class="signalrank-tagline">Retrieval, reranking & grounded responses.</div>
             """,
             unsafe_allow_html=True,
         )
 
     with action_col:
         if st.session_state.turns:
-            st.button(
-                "New chat",
-                on_click=clear_chat,
-                width="stretch",
-                type="tertiary",
-                help="Clear this conversation and start again.",
-            )
+            tune_col, new_chat_col = st.columns(2)
+
+            with tune_col:
+                render_retrieval_controls()
+
+            with new_chat_col:
+                st.button(
+                    "New",
+                    on_click=clear_chat,
+                    width="stretch",
+                    type="tertiary",
+                    help="Start a new conversation.",
+                )
+
+        else:
+            render_retrieval_controls()
 
 
 # ---------------------------------------------------------------------
@@ -782,7 +791,7 @@ elif not st.session_state.turns:
     st.markdown(
         """
 <div class="signalrank-empty">
-    <h1>Find the signal.<br><span>Inspect the evidence.</span></h1>
+    <h1>Find the signal.</h1>
 </div>
         """,
         unsafe_allow_html=True,
@@ -795,14 +804,7 @@ elif not st.session_state.turns:
             key="empty_chat_input",
         )
 
-    control_col, spacer_col = st.columns([1.2, 4.8])
-    with control_col:
-        render_retrieval_controls()
-
-    st.markdown(
-        '<div style="margin:1.4rem 0 0.55rem 0; font-size:0.70rem; font-weight:700; letter-spacing:0.095em; text-transform:uppercase; color:var(--sr-muted);">Try a demo query</div>',
-        unsafe_allow_html=True,
-    )
+    st.write("")
 
     example_left, example_right = st.columns(2)
 
@@ -820,35 +822,6 @@ elif not st.session_state.turns:
     ):
         example_query = "How do I make coffee?"
 
-    with st.expander("Demo corpus · 39 documents"):
-        st.markdown(
-            """
-**Science & space**  
-Aliens · climate observations · dinosaurs · lunar rovers ·
-Mars · Mars orbiters · oceans · radio astronomy · solar energy ·
-unexplained signals · volcanoes · weather · weather forecasting
-
-**Biology & medicine**  
-Antibiotics · antiviral resistance · immune escape · vaccines
-
-**Energy**  
-Batteries · battery management · grid storage
-
-**Computing & machine learning**  
-Machine-learning training · neural networks · optimization ·
-Python · retrieval · static typing · type systems
-
-**History & mythology**  
-Pharaohs · Greek city-states · cults · festivals · gods ·
-heroes · monsters · oracles · poetry · sacrifices · temples ·
-underworld
-            """
-        )
-
-        st.caption(
-            "Demo searches and relevance feedback may be logged for evaluation. "
-            "Please do not enter sensitive information."
-        )
 
 
 # ---------------------------------------------------------------------
@@ -862,10 +835,6 @@ else:
         render_turn(turn)
 
     st.write("")
-
-    controls_col, spacer_col = st.columns([1.2, 4.8])
-    with controls_col:
-        render_retrieval_controls()
 
     # Main-body chat input stays pinned to the bottom.
     typed_query = st.chat_input(
