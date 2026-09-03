@@ -347,11 +347,6 @@ def get_greeting_response(query: str) -> str | None:
     return GREETING_RESPONSES.get(query.strip().lower())
 
 
-def format_source_count(count: int) -> str:
-    noun = "source" if count == 1 else "sources"
-    return f"{count} {noun}"
-
-
 def wait_for_backend(
     warmup_notice,
     attempts: int = 30,
@@ -658,10 +653,10 @@ def render_turn(turn: dict) -> None:
             return
 
         if results:
-            mode_label = turn["mode"].title()
-            st.caption(f"{mode_label} · {format_source_count(len(results))}")
+            count = len(results)
+            noun = "candidate" if count == 1 else "candidates"
 
-            with st.expander("Inspect evidence"):
+            with st.expander(f"Evidence · {count} ranked {noun}"):
                 render_evidence(turn)
         else:
             st.caption("No supporting evidence retrieved")
@@ -821,7 +816,6 @@ elif not st.session_state.turns:
         width="stretch",
     ):
         example_query = "How do I make coffee?"
-
 
 
 # ---------------------------------------------------------------------
