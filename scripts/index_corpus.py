@@ -11,12 +11,6 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--recreate",
-        action="store_true",
-        help="Delete and rebuild the configured Qdrant collection.",
-    )
-
-    parser.add_argument(
         "--config",
         type=Path,
         default=CONFIG_FILE_PATH,
@@ -31,9 +25,7 @@ def main() -> None:
 
     chunks = IndexingPipeline(
         config_filepath=args.config,
-    ).run(
-        recreate=args.recreate,
-    )
+    ).run()
 
     print(f"Indexed {len(chunks)} chunks.")
 
