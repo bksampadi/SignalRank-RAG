@@ -46,3 +46,10 @@ def answerability_metrics(
         false_answers=false_answers,
         false_abstentions=false_abstentions,
     )
+
+
+def decisions_at_threshold(
+    scores: list[float],
+    threshold: float,
+) -> list[bool]:
+    return [score >= threshold for score in scores]
