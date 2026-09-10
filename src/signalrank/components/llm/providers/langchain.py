@@ -1,5 +1,5 @@
 from collections.abc import Sequence
-from typing import TypeVar
+from typing import Any, TypeVar
 
 from langchain_core.language_models.chat_models import BaseChatModel
 from langchain_core.messages import AIMessage, BaseMessage
@@ -17,9 +17,11 @@ class LangChainLLMProvider:
         *,
         name: str,
         model: BaseChatModel,
+        structured_output_kwargs: dict[str, Any] | None = None,
     ) -> None:
         self._name = name
         self._model = model
+        self._structured_output_kwargs = structured_output_kwargs or {}
 
     @property
     def name(self) -> str:
@@ -45,6 +47,7 @@ class LangChainLLMProvider:
     ) -> StructuredOutput:
         structured_model = self._model.with_structured_output(
             schema,
+            **self._structured_output_kwargs,
         )
 
         response = structured_model.invoke(

@@ -1,0 +1,63 @@
+[
+    {
+        "id": "batteries_answerable",
+        "query": "Which conditions can accelerate degradation in a rechargeable lithium-ion battery?",
+        "should_answer": true,
+        "relevant_docs": ["batteries.txt"]
+    },
+    {
+        "id": "mars_answerable",
+        "query": "Why does a Mars rover need autonomous navigation rather than continuous control from Earth?",
+        "should_answer": true,
+        "relevant_docs": ["mars.txt"]
+    },
+    {
+        "id": "antibiotics_answerable",
+        "query": "Why are antibiotics ineffective against influenza?",
+        "should_answer": true,
+        "relevant_docs": ["antibiotics.txt"]
+    },
+    {
+        "id": "retrieval_answerable",
+        "query": "How does dense retrieval differ from BM25, especially when matching a query to documents?",
+        "should_answer": true,
+        "relevant_docs": ["retrieval.txt"]
+    },
+    {
+        "id": "greek_gods_answerable",
+        "query": "Why do different sources give different accounts of the same Greek deity?",
+        "should_answer": true,
+        "relevant_docs": ["greek_gods.txt"]
+    },
+
+    {
+        "id": "batteries_unanswerable",
+        "query": "What is the maximum charging current recommended for lithium-ion batteries?",
+        "should_answer": false,
+        "relevant_docs": []
+    },
+    {
+        "id": "mars_unanswerable",
+        "query": "How fast can a Mars rover travel in kilometer per hour?",
+        "should_answer": false,
+        "relevant_docs": []
+    },
+    {
+        "id": "antibiotics_unanswerable",
+        "query": "What is the prescribed dosage of amoxicillin for bacterial pneumonia?",
+        "should_answer": false,
+        "relevant_docs": []
+    },
+    {
+        "id": "retrieval_unanswerable",
+        "query": "What is the best numerical value of the Reciprocal Rank Fusion constant for achieving best retrieval performance?",
+        "should_answer": false,
+        "relevant_docs": []
+    },
+    {
+        "id": "greek_gods_unanswerable",
+        "query": "When exactly did Zeus become ruler of the Olympian gods?",
+        "should_answer": false,
+        "relevant_docs": []
+    }
+]

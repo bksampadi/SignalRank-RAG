@@ -80,6 +80,7 @@ where = ["src"]
 [tool.logfire]
 service_name = "signalrank-rag"
 environment = "development"
+ignore_no_config = true
 
 
 [tool.ruff]

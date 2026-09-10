@@ -21,4 +21,8 @@ def build_groq_provider(
     return LangChainLLMProvider(
         name="groq",
         model=model,
+        structured_output_kwargs={
+            "method": "json_schema",
+            "strict": True,
+        },
     )

@@ -214,6 +214,17 @@ ENV/
 env.bak/
 venv.bak/
 
+# Secrets
+.env
+.env.*
+!.env.example
+
+*.pem
+*.key
+
+.streamlit/secrets.toml
+
+
 # Spyder project settings
 .spyderproject
 .spyproject
