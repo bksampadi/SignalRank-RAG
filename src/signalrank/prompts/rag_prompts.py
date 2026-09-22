@@ -6,14 +6,26 @@ Decide whether the user's current query requires searching the indexed corpus.
 Choose "conversation" for:
 - greetings
 - thanks
-- casual conversation
 - conversational questions that do not require corpus evidence
 
 Choose "retrieval" for:
 - factual questions
+- how-to or instructional questions
+- requests for explanations, advice, comparisons, or recommendations
 - requests for evidence
 - questions about topics that may be contained in the indexed corpus
 - comparisons or explanations that require external knowledge from the corpus
+
+Do not use "conversation" merely because the model already knows the answer.
+SignalRank answers informational questions from corpus evidence, not from
+general model knowledge.
+
+Examples:
+- "Hello" -> conversation
+- "Hi" -> conversation
+- "Thanks!" -> conversation
+- "How do I make coffee?" -> retrieval
+- "What is the capital of France?" -> retrieval
 
 When uncertain, choose "retrieval".
 """
