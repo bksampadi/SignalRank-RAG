@@ -281,14 +281,18 @@ jobs:
                   az containerapp update \
                     --name signalrank-api \
                     --resource-group signalrank-prod-rg \
-                    --image ghcr.io/bksampadi/signalrank-rag:${{ github.sha }}
+                    --image ghcr.io/bksampadi/signalrank-rag:${{ github.sha }} \
+                    --min-replicas 0 \
+                    --max-replicas 1
 
             - name: Deploy UI
               run: |
                   az containerapp update \
                     --name signalrank-ui \
                     --resource-group signalrank-prod-rg \
-                    --image ghcr.io/bksampadi/signalrank-rag:${{ github.sha }}
+                    --image ghcr.io/bksampadi/signalrank-rag:${{ github.sha }} \
+                    --min-replicas 0 \
+                    --max-replicas 1
 
             - name: Verify deployed images
               run: |
