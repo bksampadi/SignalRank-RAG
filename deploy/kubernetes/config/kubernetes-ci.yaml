@@ -1,0 +1,43 @@
+data_ingestion:
+  source_path: data/
+  recursive: true
+  encoding: utf-8
+  supported_extensions:
+    - .txt
+
+embedding:
+  provider: sentence_transformer
+  model_name: sentence-transformers/all-MiniLM-L6-v2
+
+chunking:
+  chunk_size: 500
+  chunk_overlap: 50
+
+retrieval:
+  top_k: 5
+  rrf_k: 60
+  candidate_multiplier: 4
+
+ranking:
+  enabled: false
+  provider: flashrank
+  model_name: ms-marco-MiniLM-L-12-v2
+  max_length: 512
+  candidate_multiplier: 4
+
+qdrant:
+  mode: local
+  collection_name: signalrank_kubernetes_smoke
+  recreate_collection: true
+  path: data/qdrant/kubernetes
+
+llm: null
+
+logfire:
+  service_name: signalrank-rag
+  environment: kubernetes-ci
+  system_metrics: false
+
+finewiki:
+  language: enwiki
+  batch_size: 256
