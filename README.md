@@ -158,10 +158,15 @@ flowchart TB
     CI["⚙️ CI/CD<br/>GitHub Actions"]
     REG["📦 Container Registry<br/>GHCR"]
     AZ["☁️ Cloud Runtime<br/>Azure Container Apps"]
+    K8S["☸️ Kubernetes Runtime<br/>kind-validated"]
 
-    CI --> REG --> AZ
+    CI --> REG
+    REG --> AZ
+    REG -. container image .-> K8S
+
     AZ -. hosts .-> UI
     AZ -. hosts .-> API
+    K8S -. hosts .-> API
 
 
     %% =========================
@@ -171,7 +176,7 @@ flowchart TB
     class EMB,RR,LLMS,OR ai
     class ING,BM,QD,RET rag
     class GRAPH,MODE,ROUTER,RESP,DECIDE,EVID agentic
-    class UI,API,OBS,CI,REG,AZ platform
+    class UI,API,OBS,CI,REG,AZ,K8S platform
     class DOCS,USER,RESULT neutral
 
     classDef ai fill:#665191,stroke:#A99CE8,stroke-width:1.5px,color:#ffffff
@@ -184,6 +189,22 @@ flowchart TB
 The same deterministic chunks feed sparse and dense retrieval. Qdrant implements the vector-database boundary, FlashRank provides second-stage ranking, and LangGraph coordinates the response path.
 
 ---
+
+### Runtime
+
+SignalRank-RAG is containerized and deployed on Azure Container Apps.
+
+A Kubernetes runtime is also validated locally with `kind`, including:
+
+- Deployment and ClusterIP Service
+- startup, readiness, and liveness probes
+- CPU/memory requests and limits
+- HorizontalPodAutoscaler
+- Secret and ConfigMap injection
+- Kustomize composition
+- authenticated retrieval through the Kubernetes Service
+
+See [`deploy/kubernetes`](deploy/kubernetes).
 
 ## Project Structure
 
@@ -480,6 +501,7 @@ Runtime endpoints and secrets are injected through deployment configuration rath
 - [x] API service-token protection and request limits
 - [x] Containerized API and UI
 - [x] Automated GHCR publishing and Azure deployment
+- [x] Kubernetes runtime with health probes, service networking, resource controls, and autoscaling configuration
 
 
 ### Next

@@ -1,0 +1,2 @@
+Mars rovers explore the surface of Mars.
+Retrieval augmented generation combines retrieval with generation.

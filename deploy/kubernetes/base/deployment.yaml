@@ -1,0 +1,102 @@
+apiVersion: apps/v1
+kind: Deployment
+
+metadata:
+  name: signalrank-api
+  namespace: signalrank
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels:
+      app: signalrank-api
+
+  template:
+    metadata:
+      labels:
+        app: signalrank-api
+
+    spec:
+      initContainers:
+        - name: seed-data
+          image: busybox:1.37
+          command:
+            - sh
+            - -c
+            - cp /seed/smoke.txt /data/smoke.txt
+
+          volumeMounts:
+            - name: smoke-data
+              mountPath: /seed
+              readOnly: true
+
+            - name: runtime-data
+              mountPath: /data
+
+      containers:
+        - name: api
+          image: ghcr.io/bksampadi/signalrank-rag:latest
+
+          ports:
+            - containerPort: 8000
+
+          env:
+            - name: SIGNALRANK_SERVICE_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: signalrank-secrets
+                  key: SIGNALRANK_SERVICE_TOKEN
+
+            - name: SIGNALRANK_CONFIG
+              value: /app/configs/kubernetes-ci.yaml
+
+          volumeMounts:
+            - name: runtime-data
+              mountPath: /app/data
+
+            - name: ci-config
+              mountPath: /app/configs/kubernetes-ci.yaml
+              subPath: kubernetes-ci.yaml
+              readOnly: true
+
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            periodSeconds: 5
+            failureThreshold: 60
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            periodSeconds: 10
+            failureThreshold: 3
+
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            periodSeconds: 20
+            failureThreshold: 3
+
+          resources:
+            requests:
+              cpu: 500m
+              memory: 1Gi
+            limits:
+              cpu: "2"
+              memory: 3Gi
+
+      volumes:
+        - name: smoke-data
+          configMap:
+            name: signalrank-smoke-data
+
+        - name: runtime-data
+          emptyDir: {}
+
+        - name: ci-config
+          configMap:
+            name: signalrank-ci-config
