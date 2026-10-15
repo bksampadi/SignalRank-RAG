@@ -1,7 +1,9 @@
 import hmac
 import os
 from contextlib import asynccontextmanager
+from datetime import UTC, date, datetime
 from pathlib import Path
+from threading import Lock
 from typing import Any
 
 import logfire
@@ -26,6 +28,21 @@ from signalrank.services.llm_service import LLMService
 from signalrank.services.ranking_service import RankingService
 from signalrank.services.retrieval_service import RetrievalService
 from signalrank.services.search_service import SearchService
+
+_day: date | None = None
+_used = 0
+_lock = Lock()
+
+
+def consume_quota() -> None:
+    global _day, _used
+    with _lock:
+        today = datetime.now(UTC).date()
+        if today != _day:
+            _day, _used = today, 0
+        if _used >= 100:
+            raise HTTPException(429, "Daily quota exceeded")
+        _used += 1
 
 
 def verify_service_token(
@@ -191,6 +208,8 @@ def retrieve(
         request.app.state.service_token,
     )
 
+    consume_quota()
+
     service: SearchService = request.app.state.search_service
 
     with logfire.span(
@@ -239,6 +258,8 @@ def chat(
         service_token,
         request.app.state.service_token,
     )
+
+    consume_quota()
 
     if payload.response_mode == "auto":
         conversation_answer = get_conversation_response(
