@@ -1,8 +1,6 @@
 <p align="center">
   <a href="https://signalrank-ui.icybeach-127c89e3.northeurope.azurecontainerapps.io">
-    <img src="docs/assets/live_demo_cta.svg"
-         alt="Try chatting with SignalRank"
-         width="1200">
+    <img src="docs/assets/live_demo_cta.svg" alt="Try SignalRank live" width="1200">
   </a>
 </p>
 
@@ -10,228 +8,212 @@
 
 **Reproducible retrieval, reranking, and grounded responses.**
 
-SignalRank-RAG is an open-source, production-oriented RAG system for building and inspecting the path from documents to evidence-backed answers.
-
-It combines deterministic ingestion, lexical and semantic retrieval, hybrid fusion, second-stage reranking, agentic routing, grounded LLM responses, evaluation, observability, and automated cloud deployment.
+SignalRank-RAG is an open-source RAG application built with **Python, FastAPI, LangGraph, and Qdrant**. It combines deterministic ingestion, hybrid retrieval, optional FlashRank reranking, evidence-backed generation, and automated cloud deployment.
 
 [![CI](https://github.com/bksampadi/SignalRank-RAG/actions/workflows/ci_cd.yml/badge.svg)](https://github.com/bksampadi/SignalRank-RAG/actions/workflows/ci_cd.yml)
 ![Python](https://img.shields.io/badge/Python-3.11--3.13-506C8A?logo=python&logoColor=white)
+[![React / TypeScript](https://img.shields.io/badge/Console-React%20%2B%20TypeScript-3178C6?logo=react&logoColor=white)](https://github.com/bksampadi/signalrank-console)
 [![Release](https://img.shields.io/github/v/release/bksampadi/SignalRank-RAG?label=release&color=8A6A46)](https://github.com/bksampadi/SignalRank-RAG/releases)
 ![Docker](https://img.shields.io/badge/Docker-containerized-47708A?logo=docker&logoColor=white)
 ![Qdrant](https://img.shields.io/badge/Qdrant-vector%20database-875566?logo=qdrant&logoColor=white)
 ![Azure](https://img.shields.io/badge/Azure-Container%20Apps-4D7188?logo=microsoftazure&logoColor=white)
+[![Cloudflare](https://img.shields.io/badge/Cloudflare-Pages-F38020?logo=cloudflare&logoColor=white)](https://github.com/bksampadi/signalrank-console)
 
-
-The retrieval UI remains intentionally inspectable: users can compare BM25, dense, and hybrid retrieval and submit per-result relevance feedback. The application layer now also supports agentic routing and grounded response generation on top of the retrieval and ranking stack.
-
----
-## How SignalRank Answers a Query
-
-SignalRank-RAG uses a small explicit graph rather than treating every request as retrieval.
-
-```text
-START
-  ↓
-Response Mode
-  │
-  ├── auto
-  │     ↓
-  │   Intent Router ── LLM structured decision
-  │     │
-  │     ├── conversation ──────────────┐
-  │     │                              ↓
-  │     └── retrieval → SearchService → Response Node → LLMService
-  │
-  ├── synthesis
-  │     ↓
-  │   SearchService → Response Node → LLMService
-  │
-  └── evidence
-        ↓
-      SearchService → Evidence Response
-                      (no LLM synthesis)
-```
-
-The shared agent state carries conversation messages, the current query, retrieval and response modes, retrieval depth, retrieved and ranked evidence, and the selected route.
-
-Routing determines which path runs; the shared SearchService determines which evidence is retrieved and prioritized. In synthesis paths, the response node sends the conversation and retrieved context through the LLMService; evidence mode instead returns ranked evidence without LLM synthesis.
-
-``` text
-/retrieve ───────────────┐
-                         ↓
-                   SearchService
-                  retrieve → rerank
-                         ↑
-/chat → LangGraph → route┘
-```
+The live **Streamlit demo** exposes BM25, dense, and hybrid retrieval with inspectable evidence and relevance feedback. A separate **[React/TypeScript Console](https://github.com/bksampadi/signalrank-console)** provides a Cloudflare Pages frontend and gateway.
 
 ---
 
 ## System Architecture
 
 <p align="center">
-  <img height="28" src="https://img.shields.io/badge/AI%20%2F%20ML-665191?style=flat-square">
-  <img height="28" src="https://img.shields.io/badge/Retrieval%20%2F%20RAG-3F718C?style=flat-square">
-  <img height="28" src="https://img.shields.io/badge/Agentic%20Orchestration-A95D45?style=flat-square">
-  <img height="28" src="https://img.shields.io/badge/Platform%20%2F%20Software%20Engineering-557567?style=flat-square">
+  <img height="26" src="https://img.shields.io/badge/AI%20%2F%20ML-665191?style=flat-square" alt="AI / ML">
+  <img height="26" src="https://img.shields.io/badge/Retrieval%20%2F%20RAG-3F718C?style=flat-square" alt="Retrieval / RAG">
+  <img height="26" src="https://img.shields.io/badge/Agentic%20Orchestration-A95D45?style=flat-square" alt="Agentic Orchestration">
+  <img height="26" src="https://img.shields.io/badge/Platform%20%2F%20Software%20Engineering-557567?style=flat-square" alt="Platform / Software Engineering">
 </p>
+
+Three views show distinct lifecycles: **request processing**, **corpus/index preparation**, and **delivery/runtime**. Colors indicate engineering responsibilities across all three.
+
+### 1. Request processing
 
 ```mermaid
 flowchart TB
+    USER(["👤 User"])
 
-    %% =========================
-    %% USER / APPLICATION / AGENTS
-    %% =========================
+    subgraph UX["🖥️ Interfaces"]
+        direction TB
+        STREAM["Streamlit demo<br/>Azure Container Apps"]
+        CONSOLE["React + TypeScript Console<br/>Cloudflare Pages"]
+        GATE["🛡️ Cloudflare gateway<br/>Turnstile · quota"]
+        CONSOLE --> GATE
+    end
 
-    USER["👤 User"]
-    UI["🖥️ Interface<br/>Streamlit"]
-    API["⚡ API<br/>FastAPI"]
-    GRAPH["🕸️ Agent Graph<br/>LangGraph"]
+    GUARD["🔐 FastAPI<br/>service token · daily quota"]
+    RET["POST /retrieve"]
+    CHAT["POST /chat"]
+    SEARCH["🔎 SearchService<br/>BM25 · dense · hybrid/RRF<br/>optional FlashRank"]
+    GRAPH["🕸️ LangGraph<br/>route · retrieve · respond"]
+    LLM["✨ LLMService<br/>Groq default · OpenRouter optional"]
+    QD[("🗄️ Qdrant")]
+    OUT["✅ Answer or ranked evidence"]
+    OBS["📈 Logfire"]
 
-    USER --> UI --> API --> GRAPH
-
-    MODE{"⚙️ Response Mode"}
-
-    GRAPH --> MODE
-
-    MODE -->|auto| ROUTER{"🧭 Intent Router"}
-    MODE -->|synthesis / evidence| RET["🔎 Search Service"]
-
-    ROUTER -->|conversation| RESP["📚 Response Node"]
-    ROUTER -->|retrieval| RET
-
-    RET --> DECIDE{"📖 Response Path"}
-
-    DECIDE -->|evidence| EVID["🔍 Evidence Response<br/>No LLM synthesis"]
-    DECIDE -->|auto / synthesis| RESP
-
-    RESP --> RESULT["✅ Response · Evidence"]
-    EVID --> RESULT
-    RESULT --> USER
-
-
-    %% =========================
-    %% LLM PLANE
-    %% =========================
-
-    LLMS["✨ LLM Service<br/>Text · Structured Output · Failover"]
-    OR["🌐 OpenRouter<br/>LangChain Adapter"]
-
-    ROUTER -. structured decision .-> LLMS
-    RESP -. generation .-> LLMS
-    LLMS --> OR
-
-
-    %% =========================
-    %% RAG / KNOWLEDGE PLANE
-    %% =========================
-
-    DOCS["📄 Documents"]
-    ING["✂️ Ingestion &<br/>Deterministic Chunking"]
-    BM["🔤 BM25 Index"]
-    EMB["🧠 Embeddings<br/>SentenceTransformers · Gemini"]
-    QD["🗄️ Vector Database<br/>Qdrant"]
-
-    DOCS --> ING
-    ING --> BM
-    ING --> EMB --> QD
-
-    BM -. lexical evidence .-> RET
-    QD -. semantic evidence .-> RET
-
-    RR["🎯 Reranker<br/>FlashRank"]
-    RET -. second-stage ranking .-> RR
-    RR -. ranked evidence .-> DECIDE
-
-
-    %% =========================
-    %% PLATFORM SUPPORT
-    %% =========================
-
-    OBS["📈 Observability<br/>Logfire"]
-
-    OBS -. traces .-> API
-    OBS -. traces .-> GRAPH
-    OBS -. traces .-> RET
-    OBS -. traces .-> LLMS
-
-    CI["⚙️ CI/CD<br/>GitHub Actions"]
-    REG["📦 Container Registry<br/>GHCR"]
-    AZ["☁️ Cloud Runtime<br/>Azure Container Apps"]
-    K8S["☸️ Kubernetes Runtime<br/>kind-validated"]
-
-    CI --> REG
-    REG --> AZ
-    REG -. container image .-> K8S
-
-    AZ -. hosts .-> UI
-    AZ -. hosts .-> API
-    K8S -. hosts .-> API
-
-
-    %% =========================
-    %% COLORS
-    %% =========================
-
-    class EMB,RR,LLMS,OR ai
-    class ING,BM,QD,RET rag
-    class GRAPH,MODE,ROUTER,RESP,DECIDE,EVID agentic
-    class UI,API,OBS,CI,REG,AZ,K8S platform
-    class DOCS,USER,RESULT neutral
+    USER --> STREAM
+    USER --> CONSOLE
+    STREAM -->|server-side token| GUARD
+    GATE -.->|API integration| GUARD
+    GUARD --> RET
+    GUARD --> CHAT
+    RET --> SEARCH
+    CHAT -->|other requests| GRAPH
+    CHAT -->|greeting shortcut| OUT
+    GRAPH --> SEARCH
+    GRAPH -.->|LLM calls| LLM
+    QD -. semantic results .-> SEARCH
+    SEARCH -->|direct retrieval| OUT
+    GRAPH -->|chat response| OUT
+    GRAPH -.->|LLM down: evidence only| OUT
+    GUARD -. traces .-> OBS
 
     classDef ai fill:#665191,stroke:#A99CE8,stroke-width:1.5px,color:#ffffff
     classDef rag fill:#3F718C,stroke:#82A8CF,stroke-width:1.5px,color:#ffffff
     classDef agentic fill:#A95D45,stroke:#D6A75C,stroke-width:1.5px,color:#ffffff
     classDef platform fill:#557567,stroke:#72AA9E,stroke-width:1.5px,color:#ffffff
     classDef neutral fill:#475569,stroke:#94A3B8,stroke-width:1.5px,color:#ffffff
+    class STREAM,CONSOLE,GATE,GUARD,RET,CHAT,OBS platform
+    class SEARCH,QD rag
+    class GRAPH agentic
+    class LLM ai
+    class USER,OUT neutral
 ```
 
-The same deterministic chunks feed sparse and dense retrieval. Qdrant implements the vector-database boundary, FlashRank provides second-stage ranking, and LangGraph coordinates the response path.
+`/retrieve` invokes `SearchService` directly; `/chat` uses LangGraph for conversation, grounded synthesis, or evidence-only responses. Both reuse the same retrieval and optional reranking pipeline. Common greetings bypass the graph.
+
+| `/chat` mode | Behaviour |
+| --- | --- |
+| `auto` | Structured LLM routing between conversation and retrieval |
+| `synthesis` | Retrieve and generate a grounded answer |
+| `evidence` | Return ranked evidence without LLM synthesis |
+
+**Reliability:** The responder abstains when evidence is insufficient. Router failures fall back to retrieval and the evidence responder; generation failures return evidence without further synthesis. Groq is the default configured provider, with OpenRouter as an alternative—not automatic cross-provider failover.
+
+**Security:** `/chat` and `/retrieve` use `X-SignalRank-Service-Token` and share an **in-process limit of 100 requests per UTC day per process** (HTTP 429). The counter resets on restart; it is not distributed. `/health` is unauthenticated, and browser code never receives the service token. The **dashed gateway-to-API link** denotes integration whose live end-to-end success has not yet been confirmed.
+
+### 2. Corpus and index lifecycle
+
+```mermaid
+flowchart TB
+    DOCS["📄 Documents<br/>PDF · Office · HTML · text"]
+
+    subgraph INDEX["📥 Index build"]
+        direction TB
+        LOAD["Load + deterministic<br/>chunking"] --> EMB["🧠 Embeddings<br/>SentenceTransformers / Gemini"] --> QD[("🗄️ Qdrant<br/>persisted vectors")]
+    end
+
+    subgraph STARTUP["⚡ API startup"]
+        direction TB
+        RELOAD["Reload + deterministic<br/>chunking"] --> BM["🔤 BM25<br/>in-memory"]
+        RELOAD --> IDS["Chunk-ID lookup"]
+    end
+
+    SRCH["🔎 Retrieval<br/>lexical · semantic · RRF"]
+
+    DOCS --> LOAD
+    DOCS --> RELOAD
+    BM -. lexical .-> SRCH
+    QD -. semantic .-> SRCH
+    IDS -. chunk mapping .-> SRCH
+
+    classDef ai fill:#665191,stroke:#A99CE8,stroke-width:1.5px,color:#ffffff
+    classDef rag fill:#3F718C,stroke:#82A8CF,stroke-width:1.5px,color:#ffffff
+    classDef neutral fill:#475569,stroke:#94A3B8,stroke-width:1.5px,color:#ffffff
+    class EMB ai
+    class LOAD,QD,RELOAD,BM,IDS,SRCH rag
+    class DOCS neutral
+```
+
+`scripts/index_corpus.py` persists embeddings in Qdrant. At API startup, BM25 and the chunk lookup are rebuilt from the same deterministically chunked corpus; `recreate_collection` can also trigger reindexing. Hybrid retrieval fuses BM25 and dense rankings with reciprocal rank fusion (RRF).
+
+### 3. Delivery and runtime
+
+```mermaid
+flowchart TB
+    subgraph BACKEND["🐍 SignalRank-RAG · Backend deployment"]
+        direction TB
+        SRC["📝 Pull request / main push"]
+
+        subgraph CI["⚙️ GitHub Actions"]
+            direction TB
+            QUALITY["Ruff · Pyright"]
+            TEST["pytest matrix<br/>Windows / Ubuntu · Python 3.11–3.13"]
+            SMOKE["Docker smoke test<br/>BM25 + dense retrieval"]
+            PASS["✅ CI passes"]
+            QUALITY --> PASS
+            TEST --> PASS
+            SMOKE --> PASS
+        end
+
+        IMAGE["📦 GHCR<br/>commit-SHA image"]
+        OIDC["🔑 Azure OIDC<br/>deployment authorization"]
+        AZURE["☁️ Azure Container Apps<br/>FastAPI · Streamlit"]
+        VERIFY["✅ Verify running images<br/>+ Streamlit reachability"]
+
+        SRC --> QUALITY
+        SRC --> TEST
+        SRC --> SMOKE
+        PASS -->|main only| IMAGE
+        PASS -->|main only| OIDC
+        IMAGE -->|image| AZURE
+        OIDC -->|authorization| AZURE
+        AZURE --> VERIFY
+    end
+
+    subgraph FRONTEND["⚛️ SignalRank Console · Independent deployment"]
+        direction TB
+        CONSOLE_SRC["📝 signalrank-console repository<br/>React · TypeScript · Vite"]
+        PAGES["☁️ Cloudflare Pages<br/>frontend hosting"]
+        GATEWAY["🛡️ Pages Functions gateway<br/>Turnstile · D1 quota"]
+        CONSOLE_SRC -->|separate deployment| PAGES
+        PAGES --> GATEWAY
+    end
+
+    OBS["📈 Logfire"]
+    K8S["☸️ Kubernetes<br/>manual kind validation"]
+
+    GATEWAY -.->|API integration<br/>end-to-end unverified| AZURE
+    AZURE -. traces .-> OBS
+    SRC -.->|manual kind validation| K8S
+
+    classDef platform fill:#557567,stroke:#72AA9E,stroke-width:1.5px,color:#ffffff
+    classDef neutral fill:#475569,stroke:#94A3B8,stroke-width:1.5px,color:#ffffff
+    class QUALITY,TEST,SMOKE,PASS,IMAGE,OIDC,AZURE,VERIFY,OBS,K8S,CONSOLE_SRC,PAGES,GATEWAY platform
+    class SRC neutral
+```
+
+**Two independent deployments:** SignalRank-RAG runs CI and publishes SHA-tagged images to GHCR before OIDC-based deployment to Azure Container Apps. The [React/TypeScript Console](https://github.com/bksampadi/signalrank-console) is deployed separately on Cloudflare Pages, with Pages Functions for Turnstile validation and quota enforcement. The Cloudflare-to-Azure API connection remains dashed until verified end to end. Kubernetes manifests are validated manually with `kind`, not deployed to production.
 
 ---
-
-### Runtime
-
-SignalRank-RAG is containerized and deployed on Azure Container Apps.
-
-A Kubernetes runtime is also validated locally with `kind`, including:
-
-- Deployment and ClusterIP Service
-- startup, readiness, and liveness probes
-- CPU/memory requests and limits
-- HorizontalPodAutoscaler
-- Secret and ConfigMap injection
-- Kustomize composition
-- authenticated retrieval through the Kubernetes Service
-
-See [`deploy/kubernetes`](deploy/kubernetes).
 
 ## Project Structure
 
 ```text
 SignalRank-RAG/
-├── .github/workflows/        # CI/CD
-├── benchmarks/retrieval/     # corpus, queries, ground truth
-├── configs/                  # application, benchmark, production configuration
-├── scripts/                  # indexing, benchmark, and local demo utilities
+├── .github/workflows/       # CI/CD
+├── benchmarks/retrieval/    # corpus, queries, ground truth
+├── configs/                 # application and benchmark settings
+├── deploy/kubernetes/       # kind-validated runtime manifests
+├── scripts/                 # indexing, benchmarking, local demo
 ├── src/signalrank/
-│   ├── agents/               # graph state, routing, retrieval and response nodes
-│   ├── api/                  # FastAPI and request validation
-│   ├── components/
-│   │   ├── chunking/         # deterministic chunking
-│   │   ├── data_ingestion/   # document loaders
-│   │   ├── embeddings/       # SentenceTransformers / Gemini
-│   │   ├── llm/              # LLM provider protocol, adapters, and factory
-│   │   ├── ranking/          # reranking implementations
-│   │   ├── retrieval/        # BM25, dense and hybrid retrieval
-│   │   └── vector_store/     # Qdrant vector-database boundary
-│   ├── config/               # typed configuration
-│   ├── evaluation/           # retrieval metrics
-│   ├── observability/        # Logfire
-│   ├── pipelines/            # indexing and search orchestration
-│   ├── prompts/              # conversation and grounded RAG prompts
-│   ├── services/             # retrieval, ranking, search and LLM services
-│   └── ui/                   # Streamlit and relevance feedback
+│   ├── agents/              # LangGraph routing and responders
+│   ├── api/                 # FastAPI endpoints and request checks
+│   ├── components/          # loaders, chunking, embeddings, retrieval, ranking
+│   ├── config/              # typed YAML configuration
+│   ├── evaluation/          # retrieval metrics
+│   ├── observability/       # Logfire integration
+│   ├── pipelines/           # indexing and retrieval orchestration
+│   ├── security/            # request quota and protection
+│   ├── services/            # search and LLM service boundaries
+│   └── ui/                  # Streamlit and feedback
 ├── tests/
 ├── compose.yaml
 ├── Dockerfile
@@ -243,67 +225,31 @@ SignalRank-RAG/
 
 ## Retrieval and Reranking
 
-SignalRank-RAG separates candidate generation from second-stage ranking.
+- **BM25:** Lexical matching for exact terms.
+- **Dense:** Semantic retrieval using embeddings in Qdrant.
+- **Hybrid:** Reciprocal rank fusion of lexical and dense rankings.
+- **FlashRank:** Optional second-stage reranking of retrieved candidates.
 
-### First-stage retrieval
+Retrieval determines the candidate set; reranking reorders it. Both are exposed through replaceable service boundaries.
 
-- **BM25** — lexical retrieval for exact terminology and token overlap
-- **Dense** — semantic retrieval over embeddings stored in Qdrant
-- **Hybrid** — reciprocal-rank fusion over BM25 and dense candidate rankings
+### Adversarial retrieval benchmark
 
-### Second-stage ranking
-
-Retrieved candidates can be passed through a configurable **FlashRank** reranker before response generation.
-
-This matters because candidate retrieval and ranking solve different problems:
-
-```text
-retrieval
-    ↓
-find a useful candidate set
-
-reranking
-    ↓
-put the strongest evidence first
-```
-
-The ranking layer is exposed behind its own interface/service boundary so ranking implementations can be replaced without changing the retrieval engine.
-
----
-
-## Adversarial Retrieval Benchmark
-
-The committed benchmark contains **39 documents and 30 labelled queries** designed to stress lexical and semantic retrieval under difficult ranking conditions.
-
-These results are a **first-stage retrieval baseline**. They measure BM25, dense, and hybrid candidate ranking before the newer second-stage reranking and agentic response layers.
+The reproducible benchmark contains **39 documents and 30 labelled queries**. Results measure **first-stage retrieval**, before reranking or answer generation.
 
 <p align="center">
-  <img src="docs/assets/signalrank_benchmark.svg"
-       alt="SignalRank-RAG adversarial retrieval benchmark"
-       width="900">
+  <img src="docs/assets/signalrank_benchmark.svg" alt="SignalRank retrieval benchmark" width="900">
 </p>
 
 | Mode | Hit@1 | MRR@5 |
 | --- | ---: | ---: |
 | BM25 | 0.433 | 0.590 |
 | Dense | **0.567** | **0.756** |
-| Hybrid | 0.467 | 0.653 |
+| Hybrid (RRF) | 0.467 | 0.653 |
 
-Dense retrieval performs best overall and reaches **Hit@5 = 1.000**: the relevant document is present somewhere in the top five for every benchmark query. On this benchmark, the remaining dense-retrieval gap is therefore primarily a ranking problem.
+Dense retrieval achieves **Hit@5 = 1.000** on this corpus, but BM25 finds top-1 matches dense retrieval misses (`BM25 only: 2`; `dense only: 6`). Their top-1 oracle reaches **0.633**; baseline hybrid fusion still underperforms dense retrieval. This motivates better fusion and reranking rather than assuming hybrid search must win.
 
-BM25 still contributes top-1 wins that dense retrieval misses:
-
-`Both correct: 11` · `BM25 only: 2` · `Dense only: 6` · `Both wrong: 11`
-
-The BM25 × Dense oracle reaches **Hit@1 = 0.633**, while top-1 agreement is **0.567**.
-
-Naive hybrid fusion does not automatically improve ranking quality despite this complementarity. The current hybrid implementation is therefore a baseline rather than a claimed improvement.
-
-That result directly motivates the second-stage ranking layer now present in SignalRank-RAG.
-
-### Reproduce the benchmark
-
-The corpus, labelled queries, configuration, indexing path, evaluation code, and benchmark runner are committed to the repository.
+<details>
+<summary><strong>Reproduce the benchmark</strong></summary>
 
 ```bash
 uv sync --extra eval
@@ -311,83 +257,57 @@ uv run --locked python scripts/index_corpus.py --config configs/benchmark.yaml -
 uv run --locked python scripts/benchmark_retrieval.py
 ```
 
-The benchmark configuration pins `sentence-transformers/all-mpnet-base-v2`, chunking, retrieval depth, fusion settings, corpus path, and the benchmark Qdrant collection. The model must be available locally or downloaded on first use.
+The benchmark configuration pins the `sentence-transformers/all-mpnet-base-v2` model, corpus, chunking, and retrieval settings. The model must be available locally or downloaded on first use.
+
+</details>
 
 ---
 
 ## API
 
-The application exposes both direct search and agentic response paths.
+| Endpoint | Purpose | Authentication |
+| --- | --- | --- |
+| `GET /health` | Liveness check | None |
+| `POST /retrieve` | BM25, dense, or hybrid results; optional reranking | Service token |
+| `POST /chat` | Routing, grounded synthesis, or evidence-only response | Service token |
 
-```text
-response_mode=auto
-    LLM-assisted intent routing;
-    conversational or retrieval-backed response
-
-response_mode=synthesis
-    always retrieve/rerank, then synthesize with the LLM
-
-response_mode=evidence
-    retrieve/rerank and return deterministic evidence without LLM synthesis
-```
-
-```text
-GET  /health
-POST /retrieve
-POST /chat
-```
-
-`POST /retrieve` returns search results directly and supports bm25, dense, and hybrid modes. When ranking is enabled, retrieved candidates are reranked before being returned.
-
-
-`POST /chat` supports deterministic handling for a small set of trivial conversational requests and otherwise executes the agent graph. The router can send conversational requests directly to the responder or send corpus-backed requests through retrieval, ranking, and grounded generation.
-
-Example:
+`/chat` supports `auto`, `synthesis`, and `evidence` response modes. The API accepts `X-SignalRank-Service-Token` for protected endpoints.
 
 ```bash
-curl -X POST http://127.0.0.1:8000/chat   -H "Content-Type: application/json"   -H "X-SignalRank-Service-Token: signalrank-local-dev"   -d '{"query":"What caused the extinction of the dinosaurs?","mode":"hybrid","top_k":5}'
+curl -X POST http://127.0.0.1:8000/chat \
+  -H "Content-Type: application/json" \
+  -H "X-SignalRank-Service-Token: signalrank-local-dev" \
+  -d '{"query":"What caused the extinction of the dinosaurs?","mode":"hybrid","top_k":5}'
 ```
 
-The protected application endpoints use the `X-SignalRank-Service-Token` header. `/health` remains available for liveness checks.
+The example token is for local development; production credentials must be supplied through secrets.
 
 ---
 
 ## Quick Start
 
-Run the local stack with Docker Compose:
-
 ```bash
 docker compose up --build
 ```
 
-Then open:
+- **Streamlit:** http://localhost:8501
+- **FastAPI docs:** http://localhost:8000/docs
+- **Health check:** http://localhost:8000/health
 
-- Streamlit: `http://localhost:8501`
-- FastAPI docs: `http://localhost:8000/docs`
-- Health: `http://localhost:8000/health`
-
-For the benchmark-backed local demo:
+For the benchmark-backed local demo on Windows:
 
 ```cmd
 scripts\run_demo.cmd
 ```
 
----
 <details>
 <summary><strong>Development and configuration</strong></summary>
 
-## Development
-
-SignalRank-RAG uses [`uv`](https://docs.astral.sh/uv/) with a committed lockfile.
+The project uses [`uv`](https://docs.astral.sh/uv/) with a committed lockfile.
 
 ```bash
-# Install
 uv sync --extra eval
-
-# Tests
 uv run --locked python -m pytest -v
-
-# Quality checks
 uv run --locked ruff check .
 uv run --locked ruff format --check .
 uv run --locked pyright
@@ -400,30 +320,12 @@ uv run uvicorn signalrank.api.main:app --reload
 uv run streamlit run src/signalrank/ui/app.py
 ```
 
----
+YAML configuration covers ingestion, embeddings, retrieval, fusion, reranking, Qdrant, response modes, and LLM providers. Qdrant supports in-memory, local, or remote operation. Deployment credentials come from environment variables or managed secrets, not committed configuration.
 
-## Configuration
-
-Application behavior is YAML-backed and separated from implementation.
-
-Configuration covers:
-
-- deterministic chunking
-- embedding provider and model
-- BM25 / dense / hybrid retrieval
-- hybrid fusion parameters
-- reranking and ranking depth
-- Qdrant execution mode and collection
-- LLM provider, model, fallback, retry, and output-token configuration
-- runtime service behavior
-
-Qdrant can run in memory, persist locally, or connect to a remote/Qdrant Cloud instance.
-
-Deployment endpoints and credentials are supplied through environment variables and platform-managed secrets rather than committed YAML.
-
-Common deployment variables include:
+Common environment variables:
 
 ```text
+GROQ_API_KEY
 GEMINI_API_KEY
 OPENROUTER_API_KEY
 QDRANT_URL
@@ -432,93 +334,38 @@ LOGFIRE_TOKEN
 SIGNALRANK_API_URL
 SIGNALRANK_SERVICE_TOKEN
 ```
+
 </details>
 
 ---
 
-## Evaluation & Observability
+## Evaluation and Observability
 
-The live Streamlit retrieval UI lets users mark individual results as **Relevant** or **Not relevant**.
+The Streamlit UI collects **Relevant / Not relevant** judgements with query and result metadata for offline retrieval diagnostics. Feedback does not change rankings online.
 
-Feedback is collected as retrieval-evaluation data rather than used to mutate rankings online. Each judgement can be associated with search/session context and result metadata, providing labelled evidence for retrieval diagnostics, relevance calibration, fusion experiments, and reranker evaluation.
-
-SignalRank-RAG uses Logfire for distributed tracing across the API, retrieval, embedding, ranking, agentic routing, LLM invocation and provider failures, vector-store operations, and relevance-feedback events.
-
-Operational spans capture metadata such as retrieval mode, route, embedding provider and dimension, collection, ranking workload, and execution timing.
-
-When relevance feedback is submitted, the associated query and result metadata may be logged for evaluation; the public UI therefore asks users not to enter sensitive information.
-
-Logfire is optional for local development.
+**Logfire** traces API requests, retrieval, embeddings, reranking, routing, LLM calls, provider failures, and feedback events. Some evaluation logs may include submitted queries or result metadata; do not enter sensitive information into the public demo. Logfire is optional locally.
 
 ---
 
-## CI and Deployment
+## Deployment and Kubernetes
 
-GitHub Actions gates deployment on code quality, type checking, the automated test suite, and Docker smoke testing.
+**Backend:** GitHub Actions publishes commit-SHA images to GHCR, deploys to Azure using OIDC, and verifies both Container Apps. Secrets are injected at runtime.
 
-```text
-GitHub
-   ↓
-GitHub Actions
-   ↓
-CI / quality gates
-   ↓
-GHCR
-   ↓
-Azure Container Apps
-   ├── FastAPI
-   └── Streamlit
-          ↓
-      Qdrant Cloud
-```
+**Frontend:** The separate [SignalRank Console](https://github.com/bksampadi/signalrank-console) repository deploys React/TypeScript assets and a Pages Functions gateway to Cloudflare Pages. Its protected API path requires end-to-end verification.
 
-The deployment workflow publishes immutable commit-SHA images, authenticates to Azure through OIDC, updates both application services, verifies the deployed revisions, and checks public reachability.
-
-Runtime endpoints and secrets are injected through deployment configuration rather than stored in the repository.
+Kubernetes configuration under [`deploy/kubernetes`](deploy/kubernetes) is validated locally with `kind`. It includes a Deployment, ClusterIP Service, startup/readiness/liveness probes, resource limits, HorizontalPodAutoscaler, Secrets, ConfigMaps, and Kustomize. Azure Container Apps remains the deployed runtime.
 
 ---
 
 ## Roadmap
 
-### Implemented
+**Implemented:** Deterministic ingestion; BM25, dense, and hybrid retrieval; optional FlashRank reranking; LangGraph routing, evidence-only fallback, and basic abstention; adversarial evaluation; relevance feedback; API token/quota; Azure CI/CD; Cloudflare Pages Console deployment; kind-validated Kubernetes manifests.
 
-- [x] Deterministic multi-format ingestion
-- [x] BM25, dense, and hybrid retrieval
-- [x] Retrieval evaluation framework
-- [x] Adversarial retrieval benchmark
-- [x] Multi-provider embeddings
-- [x] Qdrant vector database integration
-- [x] Configurable FlashRank reranking
-- [x] Retrieval → reranking orchestration
-- [x] Agentic routing
-- [x] Conversational response path
-- [x] Grounded RAG response path
-- [x] Provider-agnostic LLM service boundary
-- [x] Configurable LLM provider, model and fallback policy
-- [x] Structured LLM routing
-- [x] Evidence-only response mode without LLM synthesis
-- [x] Per-result relevance feedback
-- [x] API service-token protection and request limits
-- [x] Containerized API and UI
-- [x] Automated GHCR publishing and Azure deployment
-- [x] Kubernetes runtime with health probes, service networking, resource controls, and autoscaling configuration
-
-
-### Next
-
-- [ ] Reranker benchmark and ranking diagnostics
-- [ ] Relevance / abstention calibration
-- [ ] Improved fusion experiments
-- [ ] Embedding-model comparison
-- [ ] Larger and domain-specific retrieval benchmarks
-- [ ] Retrieval and ranking quality gates in CI
-- [ ] Richer agent routing and decision policies
+**Next:** Reranker benchmarks and ranking diagnostics; improved fusion; stronger evidence-sufficiency and abstention calibration; larger retrieval benchmarks; retrieval-quality gates in CI; richer routing policies.
 
 ---
 
 ## Cite
-
-If you find SignalRank-RAG useful in your work, you can cite the repository as:
 
 ```bibtex
 @software{signalrank_rag,
@@ -529,8 +376,7 @@ If you find SignalRank-RAG useful in your work, you can cite the repository as:
   url = {https://github.com/bksampadi/SignalRank-RAG}
 }
 ```
----
 
 ## License
 
-SignalRank-RAG is released under the MIT License. See [`LICENSE`](LICENSE).
+MIT License. See [`LICENSE`](LICENSE).
