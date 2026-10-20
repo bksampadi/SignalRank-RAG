@@ -97,42 +97,56 @@ flowchart TB
 
 **Reliability:** The responder abstains when evidence is insufficient. Router failures fall back to retrieval and the evidence responder; generation failures return evidence without further synthesis. Groq is the default configured provider, with OpenRouter as an alternative—not automatic cross-provider failover.
 
-**Security:** `/chat` and `/retrieve` use `X-SignalRank-Service-Token` and share an **in-process limit of 100 requests per UTC day per process** (HTTP 429). The counter resets on restart; it is not distributed. `/health` is unauthenticated, and browser code never receives the service token. The **dashed gateway-to-API link** denotes integration whose live end-to-end success has not yet been confirmed.
+**Security:** `/chat` and `/retrieve` use `X-SignalRank-Service-Token` and share an **in-process limit of 100 requests per UTC day per process** (HTTP 429). The counter resets on restart; it is not distributed. `/health` is unauthenticated, and browser code never receives the service token.
 
 ### 2. Corpus and index lifecycle
 
 ```mermaid
 flowchart TB
-    DOCS["📄 Documents<br/>PDF · Office · HTML · text"]
+    DOCS["📄 Source documents<br/>PDF · Office · HTML · text"]
+    HF["🤗 Hugging Face Hub<br/>all-mpnet-base-v2 model"]
 
-    subgraph INDEX["📥 Index build"]
+    subgraph BUILD["📥 1 · Index build"]
         direction TB
-        LOAD["Load + deterministic<br/>chunking"] --> EMB["🧠 Embeddings<br/>SentenceTransformers / Gemini"] --> QD[("🗄️ Qdrant<br/>persisted vectors")]
+        LOAD["Load + deterministic chunking"] --> EMB["🧠 Embed document chunks"]
+        EMB --> QD[("🗄️ Qdrant<br/>persisted vectors + payloads")]
     end
 
-    subgraph STARTUP["⚡ API startup"]
+    subgraph STARTUP["⚡ 2 · API startup"]
         direction TB
-        RELOAD["Reload + deterministic<br/>chunking"] --> BM["🔤 BM25<br/>in-memory"]
-        RELOAD --> IDS["Chunk-ID lookup"]
+        ATTACH["Connect to existing<br/>Qdrant collection"]
+        RELOAD["Reload source corpus<br/>reconstruct identical chunks"]
+        MODEL["Initialize embedding model<br/>for query encoding"]
+        BM["🔤 BM25<br/>in memory"]
+        IDS["Chunk-ID lookup"]
+        RELOAD --> BM
+        RELOAD --> IDS
     end
 
-    SRCH["🔎 Retrieval<br/>lexical · semantic · RRF"]
+    SEARCH["🔎 SearchService<br/>lexical · semantic · hybrid/RRF"]
 
     DOCS --> LOAD
-    DOCS --> RELOAD
-    BM -. lexical .-> SRCH
-    QD -. semantic .-> SRCH
-    IDS -. chunk mapping .-> SRCH
+    HF -.->|model weights| EMB
+    QD -->|persisted index| ATTACH
+    DOCS -.->|re-read at startup| RELOAD
+    HF -.->|same model| MODEL
+    ATTACH --> SEARCH
+    BM --> SEARCH
+    IDS --> SEARCH
+    MODEL --> SEARCH
+    QD -. semantic results .-> SEARCH
 
     classDef ai fill:#665191,stroke:#A99CE8,stroke-width:1.5px,color:#ffffff
     classDef rag fill:#3F718C,stroke:#82A8CF,stroke-width:1.5px,color:#ffffff
     classDef neutral fill:#475569,stroke:#94A3B8,stroke-width:1.5px,color:#ffffff
-    class EMB ai
-    class LOAD,QD,RELOAD,BM,IDS,SRCH rag
+    class HF,EMB,MODEL ai
+    class LOAD,QD,ATTACH,RELOAD,BM,IDS,SEARCH rag
     class DOCS neutral
 ```
 
-`scripts/index_corpus.py` persists embeddings in Qdrant. At API startup, BM25 and the chunk lookup are rebuilt from the same deterministically chunked corpus; `recreate_collection` can also trigger reindexing. Hybrid retrieval fuses BM25 and dense rankings with reciprocal rank fusion (RRF).
+**Index build → API startup** is the normal lifecycle: `scripts/index_corpus.py` stores chunk vectors in Qdrant; the API connects to that existing collection and **re-reads the source corpus** to rebuild BM25 and its chunk-ID lookup. Dashed arrows distinguish reused inputs from the primary flow. `recreate_collection: true` can instead rebuild Qdrant during startup.
+
+The production configuration uses Hugging Face's `sentence-transformers/all-mpnet-base-v2` model for both document and query embeddings (downloaded when absent from cache). Separately, SignalRank has an **optional FineWiki streaming source** via `HuggingFaceFW/finewiki`; the default production corpus is local files, not a live FineWiki dataset.
 
 ### 3. Delivery and runtime
 
@@ -180,7 +194,6 @@ flowchart TB
     OBS["📈 Logfire"]
     K8S["☸️ Kubernetes<br/>manual kind validation"]
 
-    GATEWAY -.->|API integration<br/>end-to-end unverified| AZURE
     AZURE -. traces .-> OBS
     SRC -.->|manual kind validation| K8S
 
@@ -190,7 +203,14 @@ flowchart TB
     class SRC neutral
 ```
 
-**Two independent deployments:** SignalRank-RAG runs CI and publishes SHA-tagged images to GHCR before OIDC-based deployment to Azure Container Apps. The [React/TypeScript Console](https://github.com/bksampadi/signalrank-console) is deployed separately on Cloudflare Pages, with Pages Functions for Turnstile validation and quota enforcement. The Cloudflare-to-Azure API connection remains dashed until verified end to end. Kubernetes manifests are validated manually with `kind`, not deployed to production.
+## Kubernetes
+
+Kubernetes manifests under [`deploy/kubernetes`](deploy/kubernetes)
+are validated locally with `kind`. They include a Deployment,
+ClusterIP Service, health probes, resource limits, HorizontalPodAutoscaler,
+Secrets, ConfigMaps, and Kustomize.
+
+Azure Container Apps remains the production runtime.
 
 ---
 
@@ -211,7 +231,6 @@ SignalRank-RAG/
 │   ├── evaluation/          # retrieval metrics
 │   ├── observability/       # Logfire integration
 │   ├── pipelines/           # indexing and retrieval orchestration
-│   ├── security/            # request quota and protection
 │   ├── services/            # search and LLM service boundaries
 │   └── ui/                  # Streamlit and feedback
 ├── tests/
