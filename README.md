@@ -152,66 +152,59 @@ The production configuration uses Hugging Face's `sentence-transformers/all-mpne
 
 ```mermaid
 flowchart TB
-    subgraph BACKEND["🐍 SignalRank-RAG · Backend deployment"]
-        direction TB
-        SRC["📝 Pull request / main push"]
 
-        subgraph CI["⚙️ GitHub Actions"]
+    subgraph BACKEND["🐍 SignalRank-RAG · Python"]
+        direction TB
+
+        SRC["GitHub · SignalRank-RAG"]
+        CI["⚙️ GitHub Actions<br/>Ruff · Pyright · pytest<br/>Docker smoke test"]
+        GHCR["📦 GHCR<br/>Commit-SHA image"]
+        OIDC["🔑 Azure OIDC<br/>Deployment authorization"]
+
+        subgraph AZURE["☁️ Azure Container Apps"]
             direction TB
-            QUALITY["Ruff · Pyright"]
-            TEST["pytest matrix<br/>Windows / Ubuntu · Python 3.11–3.13"]
-            SMOKE["Docker smoke test<br/>BM25 + dense retrieval"]
-            PASS["✅ CI passes"]
-            QUALITY --> PASS
-            TEST --> PASS
-            SMOKE --> PASS
+            API["⚡ FastAPI<br/>/retrieve · /chat"]
+            STREAM["🖥️ Streamlit<br/>Live demo"]
         end
 
-        IMAGE["📦 GHCR<br/>commit-SHA image"]
-        OIDC["🔑 Azure OIDC<br/>deployment authorization"]
-        AZURE["☁️ Azure Container Apps<br/>FastAPI · Streamlit"]
-        VERIFY["✅ Verify running images<br/>+ Streamlit reachability"]
+        VERIFY["✅ Deployment verification<br/>Image SHA · UI reachability"]
 
-        SRC --> QUALITY
-        SRC --> TEST
-        SRC --> SMOKE
-        PASS -->|main only| IMAGE
-        PASS -->|main only| OIDC
-        IMAGE -->|image| AZURE
-        OIDC -->|authorization| AZURE
-        AZURE --> VERIFY
+        SRC --> CI
+        CI -->|main| GHCR
+        CI -->|main| OIDC
+
+        GHCR --> API
+        GHCR --> STREAM
+        OIDC --> API
+        OIDC --> STREAM
+
+        STREAM -->|API requests| API
+        API --> VERIFY
+        STREAM --> VERIFY
     end
 
-    subgraph FRONTEND["⚛️ SignalRank Console · Independent deployment"]
+    subgraph FRONTEND["⚛️ SignalRank Console · React / TypeScript"]
         direction TB
-        CONSOLE_SRC["📝 signalrank-console repository<br/>React · TypeScript · Vite"]
-        PAGES["☁️ Cloudflare Pages<br/>frontend hosting"]
-        GATEWAY["🛡️ Pages Functions gateway<br/>Turnstile · D1 quota"]
-        CONSOLE_SRC -->|separate deployment| PAGES
+
+        REPO["GitHub · signalrank-console"]
+        PAGES["☁️ Cloudflare Pages<br/>React · TypeScript · Vite"]
+        GATEWAY["🛡️ Pages Functions<br/>Turnstile · D1 quota"]
+
+        REPO --> PAGES
         PAGES --> GATEWAY
     end
 
-    OBS["📈 Logfire"]
-    K8S["☸️ Kubernetes<br/>manual kind validation"]
+    GATEWAY -.->|HTTPS /retrieve<br/>server-side token| API
 
-    AZURE -. traces .-> OBS
-    SRC -.->|manual kind validation| K8S
+    API -.->|traces| LOG["📈 Logfire"]
+    SRC -.->|manual validation| K8S["☸️ Kubernetes<br/>kind"]
 
     classDef platform fill:#557567,stroke:#72AA9E,stroke-width:1.5px,color:#ffffff
     classDef neutral fill:#475569,stroke:#94A3B8,stroke-width:1.5px,color:#ffffff
-    class QUALITY,TEST,SMOKE,PASS,IMAGE,OIDC,AZURE,VERIFY,OBS,K8S,CONSOLE_SRC,PAGES,GATEWAY platform
-    class SRC neutral
+
+    class CI,GHCR,OIDC,API,STREAM,VERIFY,PAGES,GATEWAY,LOG,K8S platform
+    class SRC,REPO neutral
 ```
-
-## Kubernetes
-
-Kubernetes manifests under [`deploy/kubernetes`](deploy/kubernetes)
-are validated locally with `kind`. They include a Deployment,
-ClusterIP Service, health probes, resource limits, HorizontalPodAutoscaler,
-Secrets, ConfigMaps, and Kustomize.
-
-Azure Container Apps remains the production runtime.
-
 ---
 
 ## Project Structure
@@ -366,13 +359,14 @@ The Streamlit UI collects **Relevant / Not relevant** judgements with query and 
 
 ---
 
-## Deployment and Kubernetes
+## Kubernetes
 
-**Backend:** GitHub Actions publishes commit-SHA images to GHCR, deploys to Azure using OIDC, and verifies both Container Apps. Secrets are injected at runtime.
+Kubernetes manifests under [`deploy/kubernetes`](deploy/kubernetes)
+are validated locally with `kind`, including Deployment, ClusterIP Service,
+health probes, resource limits, HorizontalPodAutoscaler, Secrets,
+ConfigMaps, and Kustomize.
 
-**Frontend:** The separate [SignalRank Console](https://github.com/bksampadi/signalrank-console) repository deploys React/TypeScript assets and a Pages Functions gateway to Cloudflare Pages. Its protected API path requires end-to-end verification.
-
-Kubernetes configuration under [`deploy/kubernetes`](deploy/kubernetes) is validated locally with `kind`. It includes a Deployment, ClusterIP Service, startup/readiness/liveness probes, resource limits, HorizontalPodAutoscaler, Secrets, ConfigMaps, and Kustomize. Azure Container Apps remains the deployed runtime.
+Azure Container Apps remains the production runtime.
 
 ---
 
