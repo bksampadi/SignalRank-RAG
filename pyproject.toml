@@ -14,7 +14,7 @@ dependencies = [
     "PyYAML>=6.0,<7",
     "python-box>=7.4,<8",
     # Observability
-    "logfire[fastapi,requests]>=4.40,<5",
+    "logfire[fastapi,requests]>=5.2,<6",
     # Data ingestion
     "pymupdf",
     "beautifulsoup4>=4.15.0",
