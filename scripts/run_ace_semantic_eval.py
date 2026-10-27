@@ -29,10 +29,7 @@ def main() -> None:
     if config.llm is None:
         raise RuntimeError("LLM configuration is required for ACE evaluation.")
 
-    print(
-        f"Provider: {config.llm.provider} | "
-        f"Model: {config.llm.model_name}"
-    )
+    print(f"Provider: {config.llm.provider} | Model: {config.llm.model_name}")
 
     eval_llm_config = replace(
         config.llm,

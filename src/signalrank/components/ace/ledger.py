@@ -12,7 +12,7 @@ class EvidenceLedger:
     def from_evidence(
         cls,
         evidence: Iterable[StanceEvidence],
-    ) -> "EvidenceLedger": 
+    ) -> "EvidenceLedger":
         return cls(tuple(evidence))
 
     @property
@@ -20,10 +20,7 @@ class EvidenceLedger:
         return len(self.evidence)
 
     def count(self, stance: EvidenceStance) -> int:
-        return sum(
-            item.stance is stance
-            for item in self.evidence
-        )
+        return sum(item.stance is stance for item in self.evidence)
 
     @property
     def supports(self) -> int:
@@ -44,4 +41,3 @@ class EvidenceLedger:
     @property
     def answer_changing_evidence_found(self) -> bool:
         return self.contradicts > 0 or self.qualifies > 0
-    

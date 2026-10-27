@@ -15,9 +15,7 @@ class ACEEvalCase:
 
     def __post_init__(self) -> None:
         if len(self.evidence) != len(self.expected_stances):
-            raise ValueError(
-                "Evidence and expected stances must have the same length."
-            )
+            raise ValueError("Evidence and expected stances must have the same length.")
 
 
 @dataclass(frozen=True)
@@ -60,8 +58,7 @@ class ACEEvalResult:
         }
 
         return sum(
-            expected in safe_stances
-            and predicted in answer_changing_stances
+            expected in safe_stances and predicted in answer_changing_stances
             for expected, predicted in zip(
                 self.expected,
                 self.predicted,
@@ -98,15 +95,10 @@ def evaluate_ace_case(
         evidence=case.evidence,
     )
 
-    predicted = tuple(
-        classification.stance
-        for classification in classifications
-    )
+    predicted = tuple(classification.stance for classification in classifications)
 
     if len(predicted) != len(case.expected_stances):
-        raise ValueError(
-            "Classifier returned a different number of classifications."
-        )
+        raise ValueError("Classifier returned a different number of classifications.")
 
     return ACEEvalResult(
         expected=case.expected_stances,

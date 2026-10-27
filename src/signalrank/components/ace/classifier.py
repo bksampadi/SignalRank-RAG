@@ -63,10 +63,7 @@ class LLMStanceClassifier:
             return ()
 
         evidence_text = "\n\n".join(
-            (
-                f"chunk_id: {result.chunk_id}\n"
-                f"passage:\n{result.text}"
-            )
+            (f"chunk_id: {result.chunk_id}\npassage:\n{result.text}")
             for result in evidence
         )
 
@@ -96,15 +93,10 @@ class LLMStanceClassifier:
         response: ClassificationBatch,
     ) -> tuple[StanceEvidence, ...]:
         expected_ids = [result.chunk_id for result in evidence]
-        returned_ids = [
-            item.chunk_id
-            for item in response.classifications
-        ]
+        returned_ids = [item.chunk_id for item in response.classifications]
 
         if len(returned_ids) != len(set(returned_ids)):
-            raise ACEClassificationError(
-                "Classifier returned duplicate chunk IDs."
-            )
+            raise ACEClassificationError("Classifier returned duplicate chunk IDs.")
 
         if set(returned_ids) != set(expected_ids):
             raise ACEClassificationError(

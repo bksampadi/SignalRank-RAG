@@ -130,8 +130,6 @@ def test_ace_eval_rejects_mismatched_case_lengths() -> None:
             expected_stances=(),
         )
     except ValueError as exc:
-        assert str(exc) == (
-            "Evidence and expected stances must have the same length."
-        )
+        assert str(exc) == ("Evidence and expected stances must have the same length.")
     else:
         raise AssertionError("Expected ACEEvalCase to reject invalid input.")
