@@ -94,7 +94,7 @@ def main() -> None:
             ),
         ),
         make_result(
-            "indirect-contradiction",
+            "role-exception",
             8,
             (
                 "Employees assigned to regulated customer environments "
@@ -119,7 +119,7 @@ def main() -> None:
         EvidenceStance.IRRELEVANT,
         EvidenceStance.IRRELEVANT,
         EvidenceStance.IRRELEVANT,
-        EvidenceStance.CONTRADICTS,
+        EvidenceStance.QUALIFIES,
         EvidenceStance.IRRELEVANT,
     )
 
@@ -135,7 +135,83 @@ def main() -> None:
         case,
     )
 
+    hard_evidence = (
+        make_result(
+            "negation-support",
+            1,
+            "Company policy states that employees are not prohibited from working remotely.",
+        ),
+        make_result(
+            "irrelevant-leave",
+            2,
+            "Working remotely does not change an employee's annual leave entitlement.",
+        ),
+        make_result(
+            "irrelevant-lunch",
+            3,
+            "The company does not reimburse lunch expenses incurred while working remotely.",
+        ),
+        make_result(
+            "irrelevant-training",
+            4,
+            (
+                "Employees who work remotely complete the same annual security "
+                "training as office-based employees."
+            ),
+        ),
+        make_result(
+            "irrelevant-logs",
+            5,
+            "Remote-access logs are retained for 90 days for security auditing.",
+        ),
+        make_result(
+            "irrelevant-equipment-rule",
+            6,
+            (
+                "Company monitors may not be taken outside the country, "
+                "including when employees are working remotely."
+            ),
+        ),
+        make_result(
+            "qualify-role",
+            7,
+            (
+                "Employees may work remotely only if their role has been "
+                "designated remote-eligible."
+            ),
+        ),
+        make_result(
+            "qualify-location",
+            8,
+            "Remote work is permitted only from locations within the Netherlands.",
+        ),
+    )
+
+    hard_expected = (
+        EvidenceStance.SUPPORTS,
+        EvidenceStance.IRRELEVANT,
+        EvidenceStance.IRRELEVANT,
+        EvidenceStance.IRRELEVANT,
+        EvidenceStance.IRRELEVANT,
+        EvidenceStance.IRRELEVANT,
+        EvidenceStance.QUALIFIES,
+        EvidenceStance.QUALIFIES,
+    )
+
+    hard_case = ACEEvalCase(
+        query="Can employees work remotely?",
+        candidate_answer="Employees may work remotely.",
+        evidence=hard_evidence,
+        expected_stances=hard_expected,
+    )
+
+    hard_result = evaluate_ace_case(
+        classifier,
+        hard_case,
+    )
+
     print()
+    print("Batch 1")
     print(f"{'chunk_id':<24} {'expected':<14} {'predicted':<14}")
     print("-" * 54)
 
@@ -155,6 +231,28 @@ def main() -> None:
     print(f"Stance accuracy: {result.stance_accuracy:.3f}")
     print(f"False flags:     {result.false_flags}/{result.safe_cases}")
     print(f"False-flag rate: {result.false_flag_rate:.3f}")
+
+    print()
+    print("Batch 2 — hard negatives")
+    print(f"{'chunk_id':<24} {'expected':<14} {'predicted':<14}")
+    print("-" * 54)
+
+    for passage, expected_stance, predicted_stance in zip(
+        hard_evidence,
+        hard_result.expected,
+        hard_result.predicted,
+        strict=True,
+    ):
+        print(
+            f"{passage.chunk_id:<24} "
+            f"{expected_stance.value:<14} "
+            f"{predicted_stance.value:<14}"
+        )
+
+    print()
+    print(f"Stance accuracy: {hard_result.stance_accuracy:.3f}")
+    print(f"False flags:     {hard_result.false_flags}/{hard_result.safe_cases}")
+    print(f"False-flag rate: {hard_result.false_flag_rate:.3f}")
 
 
 if __name__ == "__main__":
