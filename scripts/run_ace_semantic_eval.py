@@ -1,3 +1,5 @@
+from dataclasses import replace
+
 from signalrank.components.ace.classifier import LLMStanceClassifier
 from signalrank.components.ace.models import EvidenceStance
 from signalrank.components.llm.factory import build_llm_service
@@ -32,7 +34,12 @@ def main() -> None:
         f"Model: {config.llm.model_name}"
     )
 
-    llm_service = build_llm_service(config.llm)
+    eval_llm_config = replace(
+        config.llm,
+        max_output_tokens=1024,
+    )
+
+    llm_service = build_llm_service(eval_llm_config)
     classifier = LLMStanceClassifier(llm_service)
 
     evidence = (
@@ -89,6 +96,22 @@ def main() -> None:
                 "working from home."
             ),
         ),
+        make_result(
+            "indirect-contradiction",
+            8,
+            (
+                "Employees assigned to regulated customer environments "
+                "must perform all work from company premises."
+            ),
+        ),
+        make_result(
+            "regulated-laptop",
+            9,
+            (
+                "Employees assigned to regulated customer environments "
+                "use company-managed laptops."
+            ),
+        ),
     )
 
     expected = (
@@ -98,6 +121,8 @@ def main() -> None:
         EvidenceStance.IRRELEVANT,
         EvidenceStance.IRRELEVANT,
         EvidenceStance.IRRELEVANT,
+        EvidenceStance.IRRELEVANT,
+        EvidenceStance.CONTRADICTS,
         EvidenceStance.IRRELEVANT,
     )
 
