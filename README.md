@@ -21,6 +21,8 @@ SignalRank-RAG is an open-source RAG application built with **Python, FastAPI, L
 
 The live **Streamlit demo** exposes BM25, dense, and hybrid retrieval with inspectable evidence and relevance feedback. A separate **[React/TypeScript Console](https://github.com/bksampadi/signalrank-console)** provides a Cloudflare Pages frontend and gateway.
 
+Experimental ACE stance classification and evidence-ledger diagnostics help evaluate whether retrieved passages contradict or qualify a proposed answer; this capability is not yet part of live answer generation.
+
 ---
 
 ## System Architecture
@@ -275,6 +277,72 @@ The benchmark configuration pins the `sentence-transformers/all-mpnet-base-v2` m
 
 ---
 
+## Answer-Changing Evidence (ACE)
+
+A RAG answer can be faithful to its *visible* context and still be wrong when corrective evidence was never exposed to the generator. **Answer-Changing Evidence (ACE)** distinguishes **evidence availability** from **evidence exposure**. The controlled research motivating this module is documented in [counter-evidence-loss](https://github.com/bksampadi/counter-evidence-loss).
+
+### ACE metrics (controlled, oracle-labelled benchmark)
+
+- **ACE-A — availability:** `1` when the benchmark-labelled answer-changing passage exists in the corpus; otherwise `0`.
+- **ACE-E@k — exposure:** `1` when that passage reaches the generator-visible top-`k` context; otherwise `0`.
+
+Both are binary *per case*; benchmark summaries report their means. On the **six synthetic claims** in the separate research repository (`k = 5`):
+
+| Evidence condition | ACE-A | ACE-E@5 | Correct answers |
+| --- | ---: | ---: | ---: |
+| Exposed to generator | 1.000 | 1.000 | 6/6 |
+| Available in corpus, not exposed | 1.000 | 0.000 | 0/6 |
+| Absent from corpus | 0.000 | 0.000 | 0/6 |
+
+These **oracle-labelled research metrics** require knowing which passage would change the answer; they cannot be computed as ground truth for arbitrary live queries using model predictions alone.
+
+### Implemented in SignalRank-RAG: stance diagnostics
+
+The experimental ACE component classifies candidate passages **relative to a query and candidate answer** as `supports`, `contradicts`, `qualifies`, or `irrelevant`. `EvidenceLedger` preserves passage references and counts each stance. Its `answer_changing_evidence_found` signal is true when at least one *assessed* passage contradicts or qualifies the candidate answer. This is a **candidate-set diagnostic**, not corpus-wide proof or an oracle ACE-A/ACE-E@k score.
+
+```mermaid
+flowchart TB
+    subgraph DIAG["Implemented: experimental stance diagnostics"]
+        direction LR
+        INPUT["Query + candidate answer<br/>candidate passages"] --> CLS["LLM stance classifier"]
+        CLS --> LEDGER["EvidenceLedger<br/>supports · contradicts<br/>qualifies · irrelevant"]
+        LEDGER --> CHECK{"Contradicts<br/>or qualifies?"}
+        CHECK -->|Yes| FLAG["Flag potential<br/>answer-changing evidence"]
+        CHECK -->|No| UNSEEN["Not found among<br/>assessed passages"]
+    end
+
+    subgraph ORACLE["Separate research: oracle-labelled ACE metrics"]
+        direction LR
+        GOLD["Known corrective passage"] --> CORPUS{"In corpus?"}
+        GOLD --> CONTEXT{"In generator<br/>top-k context?"}
+        CORPUS --> AVAIL["ACE-A"]
+        CONTEXT --> EXPOSE["ACE-E@k"]
+    end
+
+    classDef ai fill:#665191,stroke:#A99CE8,color:#ffffff
+    classDef rag fill:#3F718C,stroke:#82A8CF,color:#ffffff
+    classDef neutral fill:#475569,stroke:#94A3B8,color:#ffffff
+    class INPUT,GOLD neutral
+    class CLS ai
+    class LEDGER,CHECK,FLAG,UNSEEN,CORPUS,CONTEXT,AVAIL,EXPOSE rag
+```
+
+The classifier returns structured results keyed to input chunk IDs, rejects missing or duplicate IDs, and restores the original evidence order. The offline evaluator reports stance accuracy and the rate at which safe passages (`supports`/`irrelevant`) are incorrectly flagged as answer-changing (`contradicts`/`qualifies`).
+
+**Targeted semantic validation:** 17/17 annotated passages correctly classified; 5/5 answer-changing passages detected; 0/12 safe passages falsely flagged in each of three runs. This is a **small, synthetic validation**, not a production performance claim.
+
+```bash
+# Deterministic unit tests (no external LLM calls)
+uv run pytest -q tests/test_ace_ledger.py tests/test_ace_classifier.py tests/test_ace_eval.py
+
+# Live semantic check; requires configured LLM credentials
+uv run python scripts/run_ace_semantic_eval.py
+```
+
+**Status:** The ACE ledger, classifier and evaluation tooling exist in the codebase, but ACE assessment is **not yet integrated into production `/chat` or `/retrieve` decision-making**. Potential future extensions includes deeper candidate-pool assessment, retrieval/exposure diagnostics, abstention calibration, and evaluation before a guarded runtime rollout. Lack of a detected contradiction is **not** proof that the corpus contains none.
+
+---
+
 ## API
 
 | Endpoint | Purpose | Authentication |
@@ -372,9 +440,9 @@ Azure Container Apps remains the production runtime.
 
 ## Roadmap
 
-**Implemented:** Deterministic ingestion; BM25, dense, and hybrid retrieval; optional FlashRank reranking; LangGraph routing, evidence-only fallback, and basic abstention; adversarial evaluation; relevance feedback; API token/quota; Azure CI/CD; Cloudflare Pages Console deployment; kind-validated Kubernetes manifests.
+**Implemented:** Deterministic ingestion; BM25, dense, and hybrid retrieval; optional FlashRank reranking; LangGraph routing, evidence-only fallback, and basic abstention; adversarial evaluation; relevance feedback; API token/quota; Azure CI/CD; Cloudflare Pages Console deployment; kind-validated Kubernetes manifests; experimental ACE stance classifier, evidence ledger, and offline evaluator.
 
-**Next:** Reranker benchmarks and ranking diagnostics; improved fusion; stronger evidence-sufficiency and abstention calibration; larger retrieval benchmarks; retrieval-quality gates in CI; richer routing policies.
+**Future directions:** Reranker benchmarks and ranking diagnostics; improved fusion; stronger evidence-sufficiency and abstention calibration; larger retrieval benchmarks; retrieval-quality gates in CI; richer routing policies; ACE candidate-depth assessment and guarded runtime integration.
 
 ---
 
