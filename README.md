@@ -286,6 +286,23 @@ A RAG answer can be faithful to its *visible* context and still be wrong when co
 - **ACE-A — availability:** `1` when the benchmark-labelled answer-changing passage exists in the corpus; otherwise `0`.
 - **ACE-E@k — exposure:** `1` when that passage reaches the generator-visible top-`k` context; otherwise `0`.
 
+```mermaid
+flowchart TB
+    GOLD["Benchmark-labelled<br/>Answer-Changing Evidence"]
+
+    GOLD --> CORPUS{"Available<br/>in corpus?"}
+    GOLD --> CONTEXT{"Exposed in<br/>generator context?"}
+
+    CORPUS --> AVAIL["ACE-A<br/>Evidence Availability"]
+    CONTEXT --> EXPOSE["ACE-E@k<br/>Evidence Exposure"]
+
+    classDef neutral fill:#475569,stroke:#94A3B8,color:#ffffff
+    classDef rag fill:#3F718C,stroke:#82A8CF,color:#ffffff
+
+    class GOLD neutral
+    class CORPUS,CONTEXT,AVAIL,EXPOSE rag
+```
+
 Both are binary *per case*; benchmark summaries report their means. On the **six synthetic claims** in the separate research repository (`k = 5`):
 
 | Evidence condition | ACE-A | ACE-E@5 | Correct answers |
@@ -302,29 +319,32 @@ The experimental ACE component classifies candidate passages **relative to a que
 
 ```mermaid
 flowchart TB
-    subgraph DIAG["Implemented: experimental stance diagnostics"]
-        direction LR
-        INPUT["Query + candidate answer<br/>candidate passages"] --> CLS["LLM stance classifier"]
-        CLS --> LEDGER["EvidenceLedger<br/>supports · contradicts<br/>qualifies · irrelevant"]
-        LEDGER --> CHECK{"Contradicts<br/>or qualifies?"}
-        CHECK -->|Yes| FLAG["Flag potential<br/>answer-changing evidence"]
-        CHECK -->|No| UNSEEN["Not found among<br/>assessed passages"]
-    end
+    INPUT["Query + Candidate Answer<br/>Retrieved Passages"]
 
-    subgraph ORACLE["Separate research: oracle-labelled ACE metrics"]
-        direction LR
-        GOLD["Known corrective passage"] --> CORPUS{"In corpus?"}
-        GOLD --> CONTEXT{"In generator<br/>top-k context?"}
-        CORPUS --> AVAIL["ACE-A"]
-        CONTEXT --> EXPOSE["ACE-E@k"]
-    end
+    CLS["LLM Stance Classifier"]
+
+    LEDGER["EvidenceLedger<br/>Passage IDs + Stance"]
+
+    CHECK{"Contradicts<br/>or Qualifies?"}
+
+    FLAG["Potential Answer-Changing<br/>Evidence Detected"]
+
+    NONE["Not Detected Among<br/>Assessed Passages"]
+
+    INPUT --> CLS
+    CLS --> LEDGER
+    LEDGER --> CHECK
+
+    CHECK -->|Yes| FLAG
+    CHECK -->|No| NONE
 
     classDef ai fill:#665191,stroke:#A99CE8,color:#ffffff
     classDef rag fill:#3F718C,stroke:#82A8CF,color:#ffffff
     classDef neutral fill:#475569,stroke:#94A3B8,color:#ffffff
-    class INPUT,GOLD neutral
+
+    class INPUT neutral
     class CLS ai
-    class LEDGER,CHECK,FLAG,UNSEEN,CORPUS,CONTEXT,AVAIL,EXPOSE rag
+    class LEDGER,CHECK,FLAG,NONE rag
 ```
 
 The classifier returns structured results keyed to input chunk IDs, rejects missing or duplicate IDs, and restores the original evidence order. The offline evaluator reports stance accuracy and the rate at which safe passages (`supports`/`irrelevant`) are incorrectly flagged as answer-changing (`contradicts`/`qualifies`).
