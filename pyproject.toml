@@ -7,7 +7,7 @@ build-backend = "setuptools.build_meta"
 name = "signalrank-rag"
 version = "0.2.0"
 description = "A signal-aware retrieval and ranking system"
-requires-python = ">=3.11,<3.14"
+requires-python = ">=3.11.5,<3.14"
 
 dependencies = [
     # Configuration
@@ -22,7 +22,7 @@ dependencies = [
     "python-pptx>=1.0.2",
     "openpyxl>=3.1.5",
     "defusedxml>=0.7.1",
-    "unstructured[docx,pptx,xlsx]>=0.24.1,<0.25",
+    "unstructured[docx,pptx,xlsx]>=0.27.37,<0.28",
     "datasets>=5.0.1",
     # Retrieval
     "bm25s>=0.3.10,<0.4",
